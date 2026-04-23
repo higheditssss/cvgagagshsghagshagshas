@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Kick Chat Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --g:#53fc18;--r:#ff3b5c;--p:#a970ff;--b:#1f8bff;--gold:#ffca3a;
+  --text:#efeff1;--mute:#adadb8;--border:#2a2c31;
+  --fs:14px;--sh:1px 1px 3px rgba(0,0,0,.75);
+}
+html,body{height:100%;background:transparent !important;color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;font-size:var(--fs);overflow:hidden;}
+#chat{position:fixed;inset:0;display:flex;flex-direction:column;
+  justify-content:flex-end;padding:8px 0 10px;overflow:hidden;}
+
+/* debug banner */
+#debug{position:fixed;top:6px;left:6px;right:6px;padding:8px 12px;
+  background:rgba(83,252,24,.12);border:1px solid rgba(83,252,24,.35);
+  border-radius:8px;font-size:11px;color:var(--g);font-family:monospace;
+  z-index:999;display:none;}
+#debug.show{display:block;}
+#debug.err{background:rgba(255,59,92,.12);border-color:rgba(255,59,92,.4);color:var(--r);}
+
+/* messages */
+.msg{padding:4px 12px;line-height:1.5;word-wrap:break-word;
+  font-size:var(--fs);text-shadow:var(--sh);flex-shrink:0;}
+.msg .badges{display:inline-flex;gap:2px;margin-right:3px;vertical-align:middle;}
+.msg .badge{display:inline-flex;width:18px;height:18px;flex-shrink:0;}
+.msg .badge img{width:18px;height:18px;object-fit:contain;}
+.msg .user{font-weight:700;text-shadow:var(--sh);}
+.msg .colon{color:var(--mute);}
+.msg img.emote{height:28px;vertical-align:middle;margin:-4px 1px;display:inline-block;}
+.msg .reply-ref{display:block;font-size:11px;color:var(--mute);
+  padding-left:8px;border-left:2px solid var(--border);margin-bottom:2px;opacity:.8;}
+
+/* delete */
+.msg.deleting{animation:del .35s ease forwards;}
+@keyframes del{to{opacity:0;transform:translateX(-14px);max-height:0;padding:0;overflow:hidden;}}
+
+/* auto-hide */
+.hiding{animation:hide .4s ease forwards;}
+@keyframes hide{to{opacity:0;max-height:0;padding:0;overflow:hidden;}}
+
+/* events */
+.evt{margin:4px 10px;padding:10px 14px;border-radius:10px;flex-shrink:0;
+  text-shadow:var(--sh);border:1px solid rgba(83,252,24,.3);
+  background:linear-gradient(135deg,rgba(83,252,24,.15),rgba(83,252,24,.05));}
+.evt.sub{background:linear-gradient(135deg,rgba(31,139,255,.15),rgba(31,139,255,.05));border-color:rgba(31,139,255,.3);}
+.evt.gift{background:linear-gradient(135deg,rgba(255,202,58,.15),rgba(255,202,58,.05));border-color:rgba(255,202,58,.3);}
+.evt.host{background:linear-gradient(135deg,rgba(169,112,255,.15),rgba(169,112,255,.05));border-color:rgba(169,112,255,.3);}
+.evt.ban{background:linear-gradient(135deg,rgba(255,59,92,.08),rgba(255,59,92,.03));border-color:rgba(255,59,92,.2);}
+.evt.pinned{background:linear-gradient(135deg,rgba(255,202,58,.15),rgba(255,202,58,.05));border-color:rgba(255,202,58,.3);}
+.evt.reward{background:linear-gradient(135deg,rgba(169,112,255,.2),rgba(169,112,255,.07));
+  border:1px solid rgba(169,112,255,.45);border-left:3px solid var(--p);
+  box-shadow:0 0 12px rgba(169,112,255,.12);}
+.evt-head{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+  margin-bottom:5px;color:var(--g);opacity:.85;}
+.evt.sub .evt-head{color:#4da3ff;}.evt.gift .evt-head{color:var(--gold);}
+.evt.host .evt-head{color:var(--p);}.evt.ban .evt-head{color:var(--r);opacity:.6;}
+.evt.reward .evt-head{color:var(--p);}.evt.pinned .evt-head{color:var(--gold);}
+.evt-body{font-size:13px;line-height:1.5;}
+.evt strong{color:#fff;font-weight:700;}
+.reward-body{display:flex;align-items:center;gap:10px;}
+.reward-icon{width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--p),#6a3fa0);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.reward-info{flex:1;}
+.reward-title{font-weight:700;color:#fff;font-size:13px;margin-bottom:1px;}
+.reward-user{font-size:11px;color:rgba(255,255,255,.55);}
+.reward-cost{font-size:11px;font-weight:700;color:var(--p);
+  background:rgba(169,112,255,.15);padding:2px 7px;border-radius:20px;
+  border:1px solid rgba(169,112,255,.3);}
+.reward-input{margin-top:7px;font-size:12px;background:rgba(0,0,0,.2);
+  padding:5px 10px;border-radius:6px;border-left:2px solid var(--p);}
+
+/* animations */
+.anim-pop-in .msg,.anim-pop-in .evt{animation:pop .35s cubic-bezier(.34,1.4,.64,1);transform-origin:left bottom;}
+@keyframes pop{0%{opacity:0;transform:scale(.85) translateY(6px);}70%{opacity:1;transform:scale(1.02);}100%{transform:scale(1);}}
+.anim-slide-left .msg,.anim-slide-left .evt{animation:sl .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes sl{from{opacity:0;transform:translateX(-16px);}to{opacity:1;transform:none;}}
+.anim-slide-up .msg,.anim-slide-up .evt{animation:su .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes su{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+.anim-fade .msg,.anim-fade .evt{animation:fade .25s ease-out;}
+@keyframes fade{from{opacity:0;}to{opacity:1;}}
+.anim-zoom .msg,.anim-zoom .evt{animation:zm .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes zm{from{opacity:0;transform:scale(.4);}to{opacity:1;transform:scale(1);}}
+.anim-blur .msg,.anim-blur .evt{animation:bl .4s ease-out;}
+@keyframes bl{from{opacity:0;filter:blur(6px);}to{opacity:1;filter:blur(0);}}
+.anim-bounce .msg,.anim-bounce .evt{animation:bn .5s cubic-bezier(.68,-.55,.27,1.55);}
+@keyframes bn{0%{opacity:0;transform:translateY(20px);}50%{opacity:1;transform:translateY(-4px);}100%{transform:none;}}
+.anim-glitch .msg,.anim-glitch .evt{animation:gl .4s steps(5,end);}
+@keyframes gl{0%{opacity:0;transform:translate(-4px,0);}20%{opacity:.8;transform:translate(3px,-1px);}40%{opacity:.6;transform:translate(-2px,1px);filter:hue-rotate(90deg);}60%{opacity:.9;transform:translate(1px,0);}80%{opacity:1;transform:translate(-1px,0);}100%{opacity:1;transform:none;filter:none;}}
+.anim-none .msg,.anim-none .evt{animation:none;}
+</style>
+</head>
+<body>
+<div id="debug"></div>
+<div id="chat"></div>
+<script>
+const qp=new URLSearchParams(location.search);
+// Params: channel=slug, cid=chatroomId, chid=channelId, anim=..., hide=seconds (0=off), debug=1
+const SLUG=(qp.get('channel')||'').toLowerCase();
+const ANIM=qp.get('anim')||'pop-in';
+const HIDE_SEC=parseInt(qp.get('hide')||'10');
+const AUTO_HIDE=qp.get('hide')!=='0';
+const DEBUG=qp.get('debug')==='1';
+const MAX=80;
+
+document.body.className='anim-'+ANIM;
+
+const dbg=document.getElementById('debug');
+function log(msg,isErr){
+  console.log('[overlay]',msg);
+  if(DEBUG){
+    dbg.classList.add('show');
+    dbg.classList.toggle('err',!!isErr);
+    dbg.textContent=msg;
+  }
+}
+
+// Try to get IDs from URL first (fastest), then fetch
+let chatroomId=qp.get('cid')||null;
+let channelId=qp.get('chid')||null;
+
+const chat=document.getElementById('chat');
+let pusher=null, emotes=new Map();
+// Cache for subscriber badge tiers (streamer's custom sub badges)
+let subBadges=[]; // [{months: N, src: url}]
+
+const GLOBAL_BADGE={
+  broadcaster:'https://www.kickdatabase.com/kickBadges/broadcaster.svg',
+  moderator:'data:image/svg+xml;base64,PHN2ZyB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiB2aWV3Qm94PSIwIDAgMzIgMzIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzgxN181MDY2NykiIGZpbGw9IiNGRkZGRkYiPjxwYXRoIGQ9Ik0zMCAwQzMxLjEwNDYgMCAzMiAwLjg5NTQzMSAzMiAyVjMwQzMyIDMxLjEwNDYgMzEuMTA0NiAzMiAzMCAzMkgyQzAuODk1NDMxIDMyIDAgMzEuMTA0NiAwIDMwVjJDMCAwLjg5NTQzMSAwLjg5NTQzMSAwIDIgMEgzMFpNMTYuMjE5NyAyLjk5MzE2QzE1LjgyOTIgMi42MDI2NiAxNS4xOTYyIDIuNjAyNjUgMTQuODA1NyAyLjk5MzE2TDguMzYzMjggOS40MzU1NUM3Ljk3Mjk0IDkuODI2MDggNy45NzI4NCAxMC40NTkxIDguMzYzMjggMTAuODQ5NkwxMC4wOTE4IDEyLjU3ODFDMTAuNDgyMyAxMi45Njg2IDExLjExNTMgMTIuOTY4NSAxMS41MDU5IDEyLjU3ODFMMTEuNTg1IDEyLjQ5OUwxMy45NDE0IDE0Ljg1NjRMMy41NzEyOSAyNS4yMjc1QzIuNzAzNTcgMjYuMDk1NCAyLjcwMzUgMjcuNTAyMyAzLjU3MTI5IDI4LjM3MDFDNC40MzkxMSAyOS4yMzc2IDUuODQ2MTIgMjkuMjM3NyA2LjcxMzg3IDI4LjM3MDFMMTcuMDg0IDE3Ljk5OUwxOS40NDE0IDIwLjM1NjRMMTkuMzYzMyAyMC40MzQ2QzE4Ljk3MjggMjAuODI1MSAxOC45NzI4IDIxLjQ1ODEgMTkuMzYzMyAyMS44NDg2TDIxLjA5MTggMjMuNTc3MUMyMS40ODIzIDIzLjk2NzYgMjIuMTE1NCAyMy45Njc2IDIyLjUwNTkgMjMuNTc3MUwyOC45NDgyIDE3LjEzNDhDMjkuMzM4NiAxNi43NDQzIDI5LjMzODYgMTYuMTExMiAyOC45NDgyIDE1LjcyMDdMMjcuMjE5NyAxMy45OTIyQzI2LjgyOTMgMTMuNjAxNyAyNi4xOTYyIDEzLjYwMTggMjUuODA1NyAxMy45OTIyTDI1LjcyNjYgMTQuMDcwM0wyMy4zNzAxIDExLjcxMzlDMjQuMjM3NyAxMC44NDYxIDI0LjIzNzYgOS40MzkxIDIzLjM3MDEgOC41NzEyOUMyMi41MDIzIDcuNzAzNSAyMS4wOTU0IDcuNzAzNTcgMjAuMjI3NSA4LjU3MTI5TDE3Ljg3MDEgNi4yMTM4N0wxNy45NDgyIDYuMTM1NzRDMTguMzM4OCA1Ljc0NTIyIDE4LjMzODggNS4xMTIyMSAxNy45NDgyIDQuNzIxNjhMMTYuMjE5NyAyLjk5MzE2WiIgZmlsbD0idXJsKCZxdW90OyNwYWludDBfbGluZWFyXzgxN181MDY2NyZxdW90OykiPjwvcGF0aD48cGF0aCBkPSJNMzAgMEMzMS4xMDQ2IDAgMzIgMC44OTU0MzEgMzIgMlYzMEMzMiAzMS4xMDQ2IDMxLjEwNDYgMzIgMzAgMzJIMkMwLjg5NTQzMSAzMiAwIDMxLjEwNDYgMCAzMFYyQzAgMC44OTU0MzEgMC44OTU0MzEgMCAyIDBIMzBaTTE2LjIxOTcgMi45OTMxNkMxNS44MjkyIDIuNjAyNjYgMTUuMTk2MiAyLjYwMjY1IDE0LjgwNTcgMi45OTMxNkw4LjM2MzI4IDkuNDM1NTVDNy45NzI5NCA5LjgyNjA4IDcuOTcyODQgMTAuNDU5MSA4LjM2MzI4IDEwLjg0OTZMMTAuMDkxOCAxMi41NzgxQzEwLjQ4MjMgMTIuOTY4NiAxMS4xMTUzIDEyLjk2ODUgMTEuNTA1OSAxMi41NzgxTDExLjU4NSAxMi40OTlMMTMuOTQxNCAxNC44NTY0TDMuNTcxMjkgMjUuMjI3NUMyLjcwMzU3IDI2LjA5NTQgMi43MDM1IDI3LjUwMjMgMy41NzEyOSAyOC4zNzAxQzQuNDM5MTEgMjkuMjM3NiA1Ljg0NjEyIDI5LjIzNzcgNi43MTM4NyAyOC4zNzAxTDE3LjA4NCAxNy45OTlMMTkuNDQxNCAyMC4zNTY0TDE5LjM2MzMgMjAuNDM0NkMxOC45NzI4IDIwLjgyNTEgMTguOTcyOCAyMS40NTgxIDE5LjM2MzMgMjEuODQ4NkwyMS4wOTE4IDIzLjU3NzFDMjEuNDgyMyAyMy45Njc2IDIyLjExNTQgMjMuOTY3NiAyMi41MDU5IDIzLjU3NzFMMjguOTQ4MiAxNy4xMzQ4QzI5LjMzODYgMTYuNzQ0MyAyOS4zMzg2IDE2LjExMTIgMjguOTQ4MiAxNS43MjA3TDI3LjIxOTcgMTMuOTkyMkMyNi44MjkzIDEzLjYwMTcgMjYuMTk2MiAxMy42MDE4IDI1LjgwNTcgMTMuOTkyMkwyNS43MjY2IDE0LjA3MDNMMjMuMzcwMSAxMS43MTM5QzI0LjIzNzcgMTAuODQ2MSAyNC4yMzc2IDkuNDM5MSAyMy4zNzAxIDguNTcxMjlDMjIuNTAyMyA3LjcwMzUgMjEuMDk1NCA3LjcwMzU3IDIwLjIyNzUgOC41NzEyOUwxNy44NzAxIDYuMjEzODdMMTcuOTQ4MiA2LjEzNTc0QzE4LjMzODggNS43NDUyMiAxOC4zMzg4IDUuMTEyMjEgMTcuOTQ4MiA0LjcyMTY4TDE2LjIxOTcgMi45OTMxNloiIGZpbGw9InVybCgmcXVvdDsjcGFpbnQxX2xpbmVhcl84MTdfNTA2NjcmcXVvdDspIj48L3BhdGg+PHBhdGggZD0iTTMwIDBDMzEuMTA0NiAwIDMyIDAuODk1NDMxIDMyIDJWMzBDMzIgMzEuMTA0NiAzMS4xMDQ2IDMyIDMwIDMySDJDMC44OTU0MzEgMzIgMCAzMS4xMDQ2IDAgMzBWMkMwIDAuODk1NDMxIDAuODk1NDMxIDAgMiAwSDMwWk0xNi4yMTk3IDIuOTkzMTZDMTUuODI5MiAyLjYwMjY2IDE1LjE5NjIgMi42MDI2NSAxNC44MDU3IDIuOTkzMTZMOC4zNjMyOCA5LjQzNTU1QzcuOTcyOTQgOS44MjYwOCA3Ljk3Mjg0IDEwLjQ1OTEgOC4zNjMyOCAxMC44NDk2TDEwLjA5MTggMTIuNTc4MUMxMC40ODIzIDEyLjk2ODYgMTEuMTE1MyAxMi45Njg1IDExLjUwNTkgMTIuNTc4MUwxMS41ODUgMTIuNDk5TDEzLjk0MTQgMTQuODU2NEwzLjU3MTI5IDI1LjIyNzVDMi43MDM1NyAyNi4wOTU0IDIuNzAzNSAyNy41MDIzIDMuNTcxMjkgMjguMzcwMUM0LjQzOTExIDI5LjIzNzYgNS44NDYxMiAyOS4yMzc3IDYuNzEzODcgMjguMzcwMUwxNy4wODQgMTcuOTk5TDE5LjQ0MTQgMjAuMzU2NEwxOS4zNjMzIDIwLjQzNDZDMTguOTcyOCAyMC44MjUxIDE4Ljk3MjggMjEuNDU4MSAxOS4zNjMzIDIxLjg0ODZMMjEuMDkxOCAyMy41NzcxQzIxLjQ4MjMgMjMuOTY3NiAyMi4xMTU0IDIzLjk2NzYgMjIuNTA1OSAyMy41NzcxTDI4Ljk0ODIgMTcuMTM0OEMyOS4zMzg2IDE2Ljc0NDMgMjkuMzM4NiAxNi4xMTEyIDI4Ljk0ODIgMTUuNzIwN0wyNy4yMTk3IDEzLjk5MjJDMjYuODI5MyAxMy42MDE3IDI2LjE5NjIgMTMuNjAxOCAyNS44MDU3IDEzLjk5MjJMMjUuNzI2NiAxNC4wNzAzTDIzLjM3MDEgMTEuNzEzOUMyNC4yMzc3IDEwLjg0NjEgMjQuMjM3NiA5LjQzOTEgMjMuMzcwMSA4LjU3MTI5QzIyLjUwMjMgNy43MDM1IDIxLjA5NTQgNy43MDM1NyAyMC4yMjc1IDguNTcxMjlMMTcuODcwMSA2LjIxMzg3TDE3Ljk0ODIgNi4xMzU3NEMxOC4zMzg4IDUuNzQ1MjIgMTguMzM4OCA1LjExMjIxIDE3Ljk0ODIgNC43MjE2OEwxNi4yMTk3IDIuOTkzMTZaIiBmaWxsPSJ1cmwoJnF1b3Q7I3BhaW50Ml9saW5lYXJfODE3XzUwNjY3JnF1b3Q7KSI+PC9wYXRoPjwvZz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfODE3XzUwNjY3IiB4MT0iMTguODEwMiIgeTE9Ii0xMi43MjIyIiB4Mj0iMi44ODUzNiIgeTI9IjM5LjEwNjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjRkY2QTRBIj48L3N0b3A+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjQzcwQzAwIj48L3N0b3A+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MV9saW5lYXJfODE3XzUwNjY3IiB4MT0iMTUuNzQ2NyIgeTE9Ii00Ljc1NTc1IiB4Mj0iMTYuMzIxIiB5Mj0iMzkuMDY3MiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiNGRkM5MDAiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjAuOTkiIHN0b3AtY29sb3I9IiNGRjk1MDAiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQyX2xpbmVhcl84MTdfNTA2NjciIHgxPSItMTQuOTU0MyIgeTE9IjQ2Ljk1NDQiIHgyPSIzMi4wMDAxIiB5Mj0iLTAuMDAwNTA5MjIyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iIzAwOTVGRiI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMC45OSIgc3RvcC1jb2xvcj0iIzAwQzdGRiI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PGNsaXBQYXRoIGlkPSJjbGlwMF84MTdfNTA2NjciPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0id2hpdGUiPjwvcmVjdD48L2NsaXBQYXRoPjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQwX2xpbmVhcl84MTdfNTA2NjciIHgxPSIxOC44MTAyIiB5MT0iLTEyLjcyMjIiIHgyPSIyLjg4NTM2IiB5Mj0iMzkuMTA2MyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiNGRjZBNEEiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNDNzBDMDAiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQxX2xpbmVhcl84MTdfNTA2NjciIHgxPSIxNS43NDY3IiB5MT0iLTQuNzU1NzUiIHgyPSIxNi4zMjEiIHkyPSIzOS4wNjcyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iI0ZGQzkwMCI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMC45OSIgc3RvcC1jb2xvcj0iI0ZGOTUwMCI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJwYWludDJfbGluZWFyXzgxN181MDY2NyIgeDE9Ii0xNC45NTQzIiB5MT0iNDYuOTU0NCIgeDI9IjMyLjAwMDEiIHkyPSItMC4wMDA1MDkyMjIiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjMDA5NUZGIj48L3N0b3A+PHN0b3Agb2Zmc2V0PSIwLjk5IiBzdG9wLWNvbG9yPSIjMDBDN0ZGIj48L3N0b3A+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PC9zdmc+',
+  vip:'data:image/svg+xml;base64,PHN2ZyB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iMCAwIDMyIDMyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJzaXplLVtjYWxjKDFlbSooMTgvMTMpKV0iIHdpZHRoPSIzMiIgIGhlaWdodD0iMzIiID48ZyBjbGlwLXBhdGg9InVybCgjY2xpcDBfNzQ2XzI4MTcxKSIgZmlsbD0ibm9uZSI+PHBhdGggZD0iTTMwIDBDMzEuMTA0NiAwIDMyIDAuODk1NDMxIDMyIDJWMzBDMzIgMzEuMTA0NiAzMS4xMDQ2IDMyIDMwIDMySDJDMC44OTU0MzEgMzIgMCAzMS4xMDQ2IDAgMzBWMkMwIDAuODk1NDMxIDAuODk1NDMxIDQuMTA2MzdlLTA4IDIgMEgzMFpNMTUuOTY0OCA1QzE1Ljc3NDggNS4wMDAwNSAxNS41ODggNS4wNTIwNCAxNS40MjM4IDUuMTUwMzlDMTUuMjU5NiA1LjI0ODc4IDE1LjEyNCA1LjM5MDU3IDE1LjAzMDMgNS41NjA1NUw5LjgyODEyIDE1LjAxNzZMMy41NTA3OCAxMS44OTA2QzMuMzY5MTMgMTEuNzk4NSAzLjE2NTM0IDExLjc2MDcgMi45NjM4NyAxMS43ODIyQzIuNzYyNDEgMTEuODAzOCAyLjU3MDQ4IDExLjg4NDIgMi40MTExMyAxMi4wMTI3QzIuMjUyMzUgMTIuMTQwOCAyLjEzMTg1IDEyLjMxMjYgMi4wNjM0OCAxMi41MDc4QzEuOTk1MTEgMTIuNzAzMSAxLjk4MTQzIDEyLjkxNDQgMi4wMjQ0MSAxMy4xMTcyTDQuNTgzMDEgMjUuMTI3QzQuNjM1NDQgMjUuMzc4MiA0Ljc3MTY1IDI1LjYwMzQgNC45Njc3NyAyNS43NjI3QzUuMTYzNzYgMjUuOTIxNyA1LjQwNzYyIDI2LjAwNTYgNS42NTcyMyAyNkgyNi4yNTFDMjYuNTAwOSAyNi4wMDU3IDI2Ljc0NTMgMjUuOTIxOSAyNi45NDE0IDI1Ljc2MjdDMjcuMTM3NiAyNS42MDM0IDI3LjI3MzcgMjUuMzc4MiAyNy4zMjYyIDI1LjEyN0wyOS45Njk3IDEzLjExNzJDMzAuMDE4NyAxMi45MTAzIDMwLjAwODYgMTIuNjkzMiAyOS45NDA0IDEyLjQ5MjJDMjkuODcyMiAxMi4yOTEyIDI5Ljc0ODUgMTIuMTE1MSAyOS41ODUgMTEuOTg0NEMyOS40MjE1IDExLjg1MzcgMjkuMjI0OSAxMS43NzQzIDI5LjAxODYgMTEuNzU1OUMyOC44MTIyIDExLjczNzQgMjguNjA0OSAxMS43ODAyIDI4LjQyMTkgMTEuODc5OUwyMi4xMDI1IDE1LjAyODNMMTYuOTAwNCA1LjU2MDU1QzE2LjgwNjYgNS4zOTA1NCAxNi42NzAxIDUuMjQ4NzggMTYuNTA1OSA1LjE1MDM5QzE2LjM0MTYgNS4wNTIwNyAxNi4xNTQ5IDUgMTUuOTY0OCA1WiIgZmlsbD0idXJsKCZxdW90OyNwYWludDBfbGluZWFyXzc0Nl8yODE3MSZxdW90OykiPjwvcGF0aD48cGF0aCBkPSJNMzAgMEMzMS4xMDQ2IDAgMzIgMC44OTU0MzEgMzIgMlYzMEMzMiAzMS4xMDQ2IDMxLjEwNDYgMzIgMzAgMzJIMkMwLjg5NTQzMSAzMiAwIDMxLjEwNDYgMCAzMFYyQzAgMC44OTU0MzEgMC44OTU0MzEgNC4xMDYzN2UtMDggMiAwSDMwWk0xNS45NjQ4IDVDMTUuNzc0OCA1LjAwMDA1IDE1LjU4OCA1LjA1MjA0IDE1LjQyMzggNS4xNTAzOUMxNS4yNTk2IDUuMjQ4NzggMTUuMTI0IDUuMzkwNTcgMTUuMDMwMyA1LjU2MDU1TDkuODI4MTIgMTUuMDE3NkwzLjU1MDc4IDExLjg5MDZDMy4zNjkxMyAxMS43OTg1IDMuMTY1MzQgMTEuNzYwNyAyLjk2Mzg3IDExLjc4MjJDMi43NjI0MSAxMS44MDM4IDIuNTcwNDggMTEuODg0MiAyLjQxMTEzIDEyLjAxMjdDMi4yNTIzNSAxMi4xNDA4IDIuMTMxODUgMTIuMzEyNiAyLjA2MzQ4IDEyLjUwNzhDMS45OTUxMSAxMi43MDMxIDEuOTgxNDMgMTIuOTE0NCAyLjAyNDQxIDEzLjExNzJMNC41ODMwMSAyNS4xMjdDNC42MzU0NCAyNS4zNzgyIDQuNzcxNjUgMjUuNjAzNCA0Ljk2Nzc3IDI1Ljc2MjdDNS4xNjM3NiAyNS45MjE3IDUuNDA3NjIgMjYuMDA1NiA1LjY1NzIzIDI2SDI2LjI1MUMyNi41MDA5IDI2LjAwNTcgMjYuNzQ1MyAyNS45MjE5IDI2Ljk0MTQgMjUuNzYyN0MyNy4xMzc2IDI1LjYwMzQgMjcuMjczNyAyNS4zNzgyIDI3LjMyNjIgMjUuMTI3TDI5Ljk2OTcgMTMuMTE3MkMzMC4wMTg3IDEyLjkxMDMgMzAuMDA4NiAxMi42OTMyIDI5Ljk0MDQgMTIuNDkyMkMyOS44NzIyIDEyLjI5MTIgMjkuNzQ4NSAxMi4xMTUxIDI5LjU4NSAxMS45ODQ0QzI5LjQyMTUgMTEuODUzNyAyOS4yMjQ5IDExLjc3NDMgMjkuMDE4NiAxMS43NTU5QzI4LjgxMjIgMTEuNzM3NCAyOC42MDQ5IDExLjc4MDIgMjguNDIxOSAxMS44Nzk5TDIyLjEwMjUgMTUuMDI4M0wxNi45MDA0IDUuNTYwNTVDMTYuODA2NiA1LjM5MDU0IDE2LjY3MDEgNS4yNDg3OCAxNi41MDU5IDUuMTUwMzlDMTYuMzQxNiA1LjA1MjA3IDE2LjE1NDkgNSAxNS45NjQ4IDVaIiBmaWxsPSJ1cmwoJnF1b3Q7I3BhaW50MV9saW5lYXJfNzQ2XzI4MTcxJnF1b3Q7KSI+PC9wYXRoPjwvZz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNzQ2XzI4MTcxIiB4MT0iMTguODEwMiIgeTE9Ii0xMi43MjIyIiB4Mj0iMi44ODUzNiIgeTI9IjM5LjEwNjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjRkY2QTRBIj48L3N0b3A+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjQzcwQzAwIj48L3N0b3A+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MV9saW5lYXJfNzQ2XzI4MTcxIiB4MT0iMTUuNzQ2NyIgeTE9Ii00Ljc1NTc1IiB4Mj0iMTYuMzIxIiB5Mj0iMzkuMDY3MiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiNGRkM5MDAiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjAuOTkiIHN0b3AtY29sb3I9IiNGRjk1MDAiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iY2xpcDBfNzQ2XzI4MTcxIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIGZpbGw9IndoaXRlIj48L3JlY3Q+PC9jbGlwUGF0aD48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNzQ2XzI4MTcxIiB4MT0iMTguODEwMiIgeTE9Ii0xMi43MjIyIiB4Mj0iMi44ODUzNiIgeTI9IjM5LjEwNjMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBzdG9wLWNvbG9yPSIjRkY2QTRBIj48L3N0b3A+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjQzcwQzAwIj48L3N0b3A+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MV9saW5lYXJfNzQ2XzI4MTcxIiB4MT0iMTUuNzQ2NyIgeTE9Ii00Ljc1NTc1IiB4Mj0iMTYuMzIxIiB5Mj0iMzkuMDY3MiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiNGRkM5MDAiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjAuOTkiIHN0b3AtY29sb3I9IiNGRjk1MDAiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48L3N2Zz4=',
+  og:'https://www.kickdatabase.com/kickBadges/og.svg',
+  founder:'https://www.kickdatabase.com/kickBadges/founder.svg',
+  subscriber:'https://www.kickdatabase.com/kickBadges/subscriber.svg',
+  sub_gifter:'https://www.kickdatabase.com/kickBadges/subGifter.svg',
+  subgifter:'https://www.kickdatabase.com/kickBadges/subGifter.svg',
+  subgifter25:'https://www.kickdatabase.com/kickBadges/subGifter25.svg',
+  subgifter50:'https://www.kickdatabase.com/kickBadges/subGifter50.svg',
+  subgifter100:'https://www.kickdatabase.com/kickBadges/subGifter100.svg',
+  subgifter200:'https://www.kickdatabase.com/kickBadges/subGifter200.svg',
+  verified:'data:image/svg+xml;base64,PHN2ZyB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmlld0JveD0iMCAwIDMyIDMyIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGNsYXNzPSJzaXplLVtjYWxjKDFlbSooMTgvMTMpKV0iIHdpZHRoPSIzMiIgIGhlaWdodD0iMzIiID48ZyBjbGlwLXBhdGg9InVybCgjY2xpcDBfNjE0XzYyNzUpIiBmaWxsPSJub25lIj48cGF0aCBkPSJNMzAuODU5OCAxOS4yMzY4QzMwLjE5NzcgMTguMjA2OSAyOS41MzU2IDE3LjIxMzggMjguODczNiAxNi4xODM5QzI4LjcyNjQgMTUuOTYzMiAyOC43MjY0IDE1LjgxNjEgMjguODczNiAxNS41OTU0QzI5LjUzNTYgMTQuNjAyMyAzMC4xNjA5IDEzLjYwOTIgMzAuODIzIDEyLjYxNjFDMzEuNTk1NCAxMS40MzkxIDMxLjE5MDggMTAuMjk4OSAyOS44NjY3IDkuODIwNjlDMjguNzYzMiA5LjQxNjA5IDI3LjY1OTggOC45NzQ3MSAyNi41NTYzIDguNTcwMTJDMjYuMzM1NiA4LjQ5NjU2IDI2LjIyNTMgOC4zNDk0MyAyNi4yMjUzIDguMDkxOTZDMjYuMTg4NSA2Ljg3ODE2IDI2LjExNDkgNS42NjQzNyAyNi4wNDE0IDQuNDg3MzZDMjUuOTY3OCAzLjIgMjQuOTc0NyAyLjQ2NDM3IDIzLjcyNDEgMi43OTU0QzIyLjU0NzEgMy4wODk2NiAyMS4zNzAxIDMuNDIwNjkgMjAuMjI5OSAzLjc1MTczQzE5Ljk3MjQgMy44MjUyOSAxOS44MjUzIDMuNzUxNzMgMTkuNjQxNCAzLjU2NzgyQzE4LjkwNTcgMi42MTE0OSAxOC4xMzMzIDEuNjkxOTUgMTcuMzk3NyAwLjc3MjQxNEMxNi41ODg1IC0wLjI1NzQ3MiAxNS4zMzc5IC0wLjI1NzQ3MiAxNC40OTIgMC43NzI0MTRDMTMuNzU2MyAxLjY5MTk1IDEyLjk4MzkgMi42MTE0OSAxMi4yODUxIDMuNTMxMDNDMTIuMTAxMiAzLjc4ODUgMTEuOTE3MiAzLjgyNTI5IDExLjYyMyAzLjc1MTczQzEwLjQ4MjggMy40MjA2OSA5LjM0MjUzIDMuMTI2NDQgOC41MzMzNCAyLjkwNTc1QzYuOTUxNzMgMi41Mzc5MyA1Ljk5NTQxIDMuMTYzMjIgNS45MjE4NCA0LjQ4NzM2QzUuODQ4MjggNS43MDExNSA1Ljc3NDcyIDYuOTE0OTUgNS43Mzc5NCA4LjE2NTUyQzUuNzM3OTQgOC40MjI5OSA1LjYyNzU5IDguNTMzMzMgNS40MDY5IDguNjQzNjhDNC4yNjY2NyA5LjA4NTA2IDMuMTI2NDQgOS41MjY0NCAxLjk4NjIxIDkuOTY3ODJDMC44MDkyMDMgMTAuNDQ2IDAuNDQxMzg3IDExLjU4NjIgMS4xNDAyMyAxMi42NTI5QzEuODAyMyAxMy42ODI4IDIuNDY0MzcgMTQuNjc1OSAzLjEyNjQ0IDE1LjcwNTdDMy4yNzM1NiAxNS45MjY0IDMuMjczNTYgMTYuMDczNiAzLjEyNjQ0IDE2LjMzMUMyLjQyNzU5IDE3LjM2MDkgMS43NjU1MiAxOC4zOTA4IDEuMTAzNDUgMTkuNDU3NUMwLjQ3ODE2NSAyMC40NTA2IDAuODgyNzU5IDIxLjYyNzYgMS45ODYyMSAyMi4wNjlDMy4xMjY0NCAyMi41MTA0IDQuMzAzNDUgMjIuOTUxNyA1LjQ0MzY4IDIzLjM5MzFDNS43MDExNSAyMy40NjY3IDUuNzc0NzEgMjMuNjEzOCA1Ljc3NDcxIDIzLjg3MTNDNS44MTE0OSAyNS4wNDgzIDUuOTU4NjIgMjYuMTg4NSA1Ljk1ODYyIDI3LjM2NTVDNS45NTg2MiAyOC41NDI1IDYuOTg4NSAyOS42MDkyIDguNDIyOTggMjkuMTY3OEM5LjU2MzIxIDI4LjggMTAuNzAzNCAyOC41NDI1IDExLjg0MzcgMjguMjExNUMxMi4wNjQ0IDI4LjEzNzkgMTIuMjExNSAyOC4xNzQ3IDEyLjM1ODYgMjguMzk1NEMxMy4xMzEgMjkuMzUxNyAxMy44NjY3IDMwLjI3MTMgMTQuNjM5MSAzMS4yMjc2QzE1LjQ4NSAzMi4yNTc1IDE2LjY5ODggMzIuMjU3NSAxNy41MDggMzEuMjI3NkMxOC4yODA1IDMwLjI3MTMgMTkuMDE2MSAyOS4zNTE3IDE5Ljc4ODUgMjguMzk1NEMxOS45MzU2IDI4LjIxMTUgMjAuMDQ2IDI4LjEzNzkgMjAuMzAzNCAyOC4yMTE1QzIxLjQ4MDQgMjguNTQyNSAyMi42NTc1IDI4LjgzNjggMjMuODM0NSAyOS4xNjc4QzI1LjA0ODMgMjkuNDk4OCAyNi4wNzgxIDI4Ljc2MzIgMjYuMTE0OSAyNy41MTI2QzI2LjE4ODUgMjYuMjk4OSAyNi4yNjIxIDI1LjA4NTEgMjYuMjk4OCAyMy44MzQ1QzI2LjI5ODggMjMuNTQwMiAyNi40NDYgMjMuNDI5OSAyNi42NjY3IDIzLjM1NjNDMjcuNzcwMSAyMi45NTE3IDI4LjkxMDMgMjIuNTEwNCAzMC4wMTM4IDIyLjA2OUMzMS4xOTA4IDIxLjQ4MDUgMzEuNTU4NiAyMC4zMDM0IDMwLjg1OTggMTkuMjM2OFpNMjIuMDY5IDEzLjIwNDZMMTQuNzEyNyAyMC41NjA5QzE0LjUyODcgMjAuNzQ0OCAxNC4yNzEzIDIwLjg5MiAxNC4wMTM4IDIwLjkyODdDMTMuOTQwMiAyMC45Mjg3IDEzLjgyOTkgMjAuOTY1NSAxMy43NTYzIDIwLjk2NTVDMTMuNDI1MyAyMC45NjU1IDEzLjA1NzUgMjAuODE4NCAxMi44IDIwLjU2MDlMOS43ODM5MiAxNy41NDQ4QzkuMjY4OTggMTcuMDI5OSA5LjI2ODk4IDE2LjE4MzkgOS43ODM5MiAxNS42NjlDMTAuMjk4OSAxNS4xNTQgMTEuMTQ0OCAxNS4xNTQgMTEuNjU5OCAxNS42NjlMMTMuNzE5NiAxNy43Mjg3TDIwLjExOTYgMTEuMzI4N0MyMC42MzQ1IDEwLjgxMzggMjEuNDgwNSAxMC44MTM4IDIxLjk5NTQgMTEuMzI4N0MyMi41ODM5IDExLjg0MzcgMjIuNTgzOSAxMi42ODk3IDIyLjA2OSAxMy4yMDQ2WiIgZmlsbD0idXJsKCZxdW90OyNwYWludDBfbGluZWFyXzYxNF82Mjc1JnF1b3Q7KSI+PC9wYXRoPjwvZz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfNjE0XzYyNzUiIHgxPSI4LjE0MTM4IiB5MT0iMzIuMzU5MSIgeDI9IjI0LjQ5NjgiIHkyPSIwLjkwNDg4NCIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIHN0b3AtY29sb3I9IiMxRUZGMDAiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjAuOTkiIHN0b3AtY29sb3I9IiMwMEZGOEMiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjxjbGlwUGF0aCBpZD0iY2xpcDBfNjE0XzYyNzUiPjxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0id2hpdGUiPjwvcmVjdD48L2NsaXBQYXRoPjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQwX2xpbmVhcl82MTRfNjI3NSIgeDE9IjguMTQxMzgiIHkxPSIzMi4zNTkxIiB4Mj0iMjQuNDk2OCIgeTI9IjAuOTA0ODg0IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agc3RvcC1jb2xvcj0iIzFFRkYwMCI+PC9zdG9wPjxzdG9wIG9mZnNldD0iMC45OSIgc3RvcC1jb2xvcj0iIzAwRkY4QyI+PC9zdG9wPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjwvc3ZnPg==',
+  staff:'https://www.kickdatabase.com/kickBadges/staff.svg',
+  sidekick:'https://www.kickdatabase.com/kickBadges/sidekick.svg',
+  trainwreckstv:'https://www.kickdatabase.com/kickBadges/trainwreckstv.svg',
+};
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function parse(d){if(typeof d==='string'){try{return JSON.parse(d);}catch(e){return{};}}return d||{};}
+function userColor(n){
+  const c=['#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa0','#dda0dd','#98d8c8','#f7dc6f','#82e0aa','#7fb3d3','#f1948a','#85c1e9','#a9dfbf','#f9e79f','#d2b4de'];
+  let h=0;for(let i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);
+  return c[Math.abs(h)%c.length];
+}
+
+function add(el){
+  chat.appendChild(el);
+  while(chat.children.length>MAX)chat.removeChild(chat.firstChild);
+  if(AUTO_HIDE&&(el.classList.contains('msg')||el.classList.contains('evt'))){
+    setTimeout(()=>{
+      if(!el.parentNode)return;
+      el.classList.add('hiding');
+      setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},420);
+    },HIDE_SEC*1000);
+  }
+}
+
+/* ===== Get subscriber badge image for a given month count =====
+   Uses the streamer's custom sub badges (preloaded), falling back to global subscriber badge. */
+function getSubBadgeSrc(months){
+  if(!subBadges.length)return GLOBAL_BADGE.subscriber;
+  // find the highest tier the user qualifies for
+  let best=subBadges[0];
+  for(const b of subBadges){
+    if(months>=b.months && b.months>=best.months) best=b;
+  }
+  return best.src||GLOBAL_BADGE.subscriber;
+}
+
+function renderBadges(identity){
+  if(!identity||!identity.badges)return '';
+  return identity.badges.slice(0,6).map(b=>{
+    const t=(b.type||'').toLowerCase();
+    // Subscriber badge - prefer API-provided image, fallback to cached streamer tiers by month count
+    if(t==='subscriber'){
+      if(b.badge_image&&b.badge_image.src){
+        return `<span class="badge"><img src="${esc(b.badge_image.src)}" alt="sub"></span>`;
+      }
+      const months=b.months||b.count||1;
+      const src=getSubBadgeSrc(months);
+      return `<span class="badge"><img src="${src}" alt="sub"></span>`;
+    }
+    // Sub gifter tiers
+    if(t==='sub_gifter'||t==='subgifter'){
+      const c2=b.gifted_months||b.count||0;
+      let k='subgifter';
+      if(c2>=200)k='subgifter200';else if(c2>=100)k='subgifter100';
+      else if(c2>=50)k='subgifter50';else if(c2>=25)k='subgifter25';
+      return GLOBAL_BADGE[k]?`<span class="badge"><img src="${GLOBAL_BADGE[k]}" alt="gift"></span>`:'';
+    }
+    // Generic badge lookup
+    return GLOBAL_BADGE[t]?`<span class="badge"><img src="${GLOBAL_BADGE[t]}" alt="${t}"></span>`:'';
+  }).join('');
+}
+
+function renderText(text){
+  let html=text.replace(/\[emote:(\d+):([^\]]+)\]/g,(m,id,n)=>`<img class="emote" src="https://files.kick.com/emotes/${id}/fullsize" alt="${esc(n)}">`);
+  return html.split(/(<img[^>]+>)/g).map(p=>{
+    if(p.startsWith('<img'))return p;
+    return esc(p).replace(/\S+/g,w=>{const u=emotes.get(w);return u?`<img class="emote" src="${u}" alt="${esc(w)}">`:w;});
+  }).join('');
+}
+
+function onMsg(d){
+  const data=parse(d),s=data.sender||{};
+  const name=s.username||'anon';
+  const color=(s.identity&&s.identity.color)||userColor(name);
+  const el=document.createElement('div');
+  el.className='msg';
+  if(data.id)el.dataset.id=data.id;
+  let html='';
+  if(data.metadata&&data.metadata.original_sender){
+    const orig=data.metadata.original_sender.username||'';
+    const oMsg=(data.metadata.original_message&&data.metadata.original_message.content)||'';
+    html+=`<span class="reply-ref">↩ @${esc(orig)}: ${esc(oMsg.slice(0,80))}</span>`;
+  }
+  html+=`<span class="badges">${renderBadges(s.identity)}</span><span class="user" style="color:${color}">${esc(name)}</span><span class="colon">: </span><span class="txt">${renderText(data.content||'')}</span>`;
+  el.innerHTML=html;add(el);
+}
+
+function onDel(d){
+  const data=parse(d);
+  const id=data.message&&data.message.id;
+  if(!id)return;
+  const el=chat.querySelector(`.msg[data-id="${id}"]`);
+  if(el){el.classList.add('deleting');setTimeout(()=>{if(el.parentNode)el.parentNode.removeChild(el);},380);}
+}
+
+function evtEl(cls,head,body){
+  const el=document.createElement('div');
+  el.className='evt '+cls;
+  el.innerHTML=`<div class="evt-head">${head}</div><div class="evt-body">${body}</div>`;
+  add(el);
+}
+
+function onSub(d){
+  const data=parse(d),u=data.username||(data.user&&data.user.username)||'?',m=data.months||1;
+  evtEl('sub','★ subscription',`<strong>${esc(u)}</strong> s-a abonat · ${m} lun${m===1?'ă':'i'}`);
+}
+function onGift(d){
+  const data=parse(d),g=data.gifter_username||(data.gifter&&data.gifter.username)||'anonim';
+  const rec=data.gifted_usernames||data.usernames||[],c2=rec.length||data.amount||1;
+  let b=`<strong>${esc(g)}</strong> a dăruit <strong>${c2}</strong> sub${c2>1?'s':''}`;
+  if(rec.length&&rec.length<=5)b+=` → ${rec.map(r=>esc(r)).join(', ')}`;
+  evtEl('gift','🎁 gifted subs',b);
+}
+function onReward(d){
+  const data=parse(d),u=data.username||(data.user&&data.user.username)||'?';
+  const rw=data.reward||{},title=rw.title||data.reward_title||'Channel Points Reward';
+  const cost=rw.cost||data.reward_cost||null,inp=data.user_input||data.input||'';
+  let icon='⭐';const tl=title.toLowerCase();
+  if(tl.includes('highlight')||tl.includes('message'))icon='💬';
+  else if(tl.includes('song')||tl.includes('music'))icon='🎵';
+  else if(tl.includes('vip'))icon='💎';
+  else if(tl.includes('tts'))icon='🔊';
+  else if(tl.includes('shout'))icon='📢';
+  else if(tl.includes('timeout'))icon='⏱';
+  const el=document.createElement('div');el.className='evt reward';
+  el.innerHTML=`
+    <div class="evt-head">◆ channel points</div>
+    <div class="reward-body">
+      <div class="reward-icon">${icon}</div>
+      <div class="reward-info">
+        <div class="reward-title">${esc(title)}</div>
+        <div class="reward-user">redeemat de <strong>${esc(u)}</strong></div>
+      </div>
+      ${cost?`<div class="reward-cost">💜 ${Number(cost).toLocaleString()}</div>`:''}
+    </div>
+    ${inp?`<div class="reward-input">💬 ${esc(inp)}</div>`:''}
+  `;
+  add(el);
+}
+function onBan(d){
+  const data=parse(d),u=data.user&&data.user.username||'?',by=data.banned_by&&data.banned_by.username||'mod';
+  evtEl('ban','⛔ mod',`<strong>${esc(u)}</strong> ${data.permanent?'banat permanent':`timeout ${data.duration||''}m`} · ${esc(by)}`);
+}
+function onHost(d){
+  const data=parse(d),h=data.host_username||data.username||'?',v=data.number_viewers||0;
+  const msg=data.optional_message,raid=/raid/i.test(msg||'');
+  evtEl('host',raid?'⚔ raid':'→ host',`<strong>${esc(h)}</strong> · ${v} viewers`+(msg?` · ${esc(msg)}`:''));
+}
+function onPin(d){
+  const data=parse(d),m=data.message||{},u=(m.sender&&m.sender.username)||'?';
+  evtEl('pinned','📌 pinned',`<strong>${esc(u)}</strong>: ${renderText(m.content||'')}`);
+}
+
+/* ===== 7TV ===== */
+// Resolve best URL for a 7TV emote object (prefers AVIF > WEBP, 2x size)
+function eu(e){
+  const host=e.data?.host||e.host;
+  if(host?.url){
+    const files=host.files||[];
+    // prefer AVIF animated > WEBP animated > AVIF static > WEBP static, at 2x
+    const pick=(fmt)=>files.filter(x=>x.format===fmt).sort((a,b)=>a.width-b.width);
+    const avif=pick('AVIF');const webp=pick('WEBP');
+    const p=avif[1]||avif[0]||webp[1]||webp[0];
+    if(p)return 'https:'+host.url+'/'+p.name;
+  }
+  return `https://cdn.7tv.app/emote/${e.id}/2x.webp`;
+}
+
+// Register emotes from an emote-set object ({emotes:[...]})
+function register7tvSet(set){
+  if(!set||!Array.isArray(set.emotes))return 0;
+  let n=0;
+  set.emotes.forEach(e=>{
+    if(e.name&&(e.data||e.host||e.id)){emotes.set(e.name,eu(e));n++;}
+  });
+  return n;
+}
+
+async function load7tv(uid){
+  if(!uid)return;
+  let total=0;
+
+  // 1. Global emote set
+  try{
+    const g=await fetch('https://7tv.io/v3/emote-sets/global',{signal:AbortSignal.timeout(6000)}).then(r=>r.ok?r.json():null);
+    if(g)total+=register7tvSet(g);
+  }catch(e){log('[7TV] global fetch failed: '+e.message);}
+
+  // 2. Channel-specific emote set via KICK platform user
+  try{
+    const u=await fetch(`https://7tv.io/v3/users/KICK/${uid}`,{signal:AbortSignal.timeout(6000)}).then(r=>r.ok?r.json():null);
+    if(u){
+      // Active emote set
+      if(u.emote_set)total+=register7tvSet(u.emote_set);
+      // All connected emote sets (may include extras)
+      if(Array.isArray(u.connections)){
+        for(const conn of u.connections){
+          if(conn.emote_set_id&&conn.emote_set_id!==u.emote_set?.id){
+            try{
+              const es=await fetch(`https://7tv.io/v3/emote-sets/${conn.emote_set_id}`,{signal:AbortSignal.timeout(4000)}).then(r=>r.ok?r.json():null);
+              if(es)total+=register7tvSet(es);
+            }catch(e){}
+          }
+        }
+      }
+    }
+  }catch(e){log('[7TV] channel fetch failed: '+e.message);}
+
+  log('7TV loaded: '+total+' emotes ('+emotes.size+' total)');
+}
+
+/* ===== PUSHER ===== */
+function loadPusher(){
+  return new Promise((res,rej)=>{
+    if(window.Pusher)return res();
+    const s=document.createElement('script');
+    s.src='https://js.pusher.com/7.0/pusher.min.js';
+    s.onload=res;s.onerror=rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function connectPusher(crid, chid){
+  await loadPusher();
+  pusher=new Pusher('32cbd69e4b950bf97679',{
+    cluster:'us2',wsHost:'ws-us2.pusher.com',enabledTransports:['ws','wss']
+  });
+
+  pusher.connection.bind('connected',()=>log('Pusher connected · crid='+crid));
+  pusher.connection.bind('error',e=>log('Pusher error: '+JSON.stringify(e),true));
+
+  if(crid){
+    const a=pusher.subscribe(`chatrooms.${crid}.v2`);
+    const b=pusher.subscribe(`chatroom_${crid}`);
+    a.bind_global((name,d)=>{
+      if(name.startsWith('pusher:'))return;
+      if(name.includes('ChatMessageEvent'))onMsg(d);
+      else if(name.includes('MessageDeletedEvent'))onDel(d);
+      else if(name.includes('UserBannedEvent'))onBan(d);
+      else if(name.includes('PinnedMessageCreated'))onPin(d);
+    });
+    b.bind_global((name,d)=>{
+      if(name.startsWith('pusher:'))return;
+      if(name.includes('SubscriptionEvent'))onSub(d);
+      else if(name.includes('GiftedSubscriptionsEvent')||name.includes('GiftsLeaderboard'))onGift(d);
+      else if(name.includes('RewardRedeemed'))onReward(d);
+    });
+  }
+  if(chid){
+    const c=pusher.subscribe(`channel.${chid}`);
+    c.bind_global((name,d)=>{
+      if(name.startsWith('pusher:'))return;
+      if(name.includes('StreamHostEvent'))onHost(d);
+    });
+  }
+}
+
+/* ===== FETCH CHANNEL — multiple methods ===== */
+async function tryFetch(url){
+  // Method 1: direct
+  try{const r=await fetch(url,{headers:{'Accept':'application/json'}});if(r.ok){const j=await r.json();if(j&&j.id)return j;}}catch(e){}
+  // Method 2: proxies
+  const proxies=[
+    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u=>`https://thingproxy.freeboard.io/fetch/${u}`,
+    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  ];
+  for(const px of proxies){
+    try{
+      const r=await fetch(px(url),{signal:AbortSignal.timeout(5000)});
+      if(r.ok){const t=await r.text();try{const j=JSON.parse(t);if(j&&j.id)return j;}catch(e){}}
+    }catch(e){}
+  }
+  return null;
+}
+
+async function fetchIds(slug){
+  // Try v2 API first
+  let j=await tryFetch(`https://kick.com/api/v2/channels/${slug}`);
+  if(j&&j.chatroom){
+    cacheSubBadges(j);
+    return{crid:String(j.chatroom.id),chid:String(j.id),uid:String(j.user_id||j.id)};
+  }
+  // Try v1 API
+  j=await tryFetch(`https://kick.com/api/v1/channels/${slug}`);
+  if(j&&j.chatroom){
+    cacheSubBadges(j);
+    return{crid:String(j.chatroom.id),chid:String(j.id),uid:String(j.user_id||j.id)};
+  }
+  return null;
+}
+
+/* ===== Cache streamer's custom subscriber badges (tier 1/2/3/6/12/24 months etc) ===== */
+function cacheSubBadges(channelData){
+  // Kick channel API returns subscriber_badges: [{months: N, badge_image: {src: url}}]
+  const arr=channelData.subscriber_badges||channelData.subscriberBadges||[];
+  if(!arr.length)return;
+  subBadges=arr.map(b=>({
+    months:b.months||b.month||1,
+    src:(b.badge_image&&b.badge_image.src)||b.image||b.src||null,
+  })).filter(b=>b.src).sort((a,b)=>a.months-b.months);
+  log('Loaded '+subBadges.length+' custom sub badge tiers');
+}
+
+/* ===== TEST MODE: if ?debug=1, show sample messages so you can see it's alive ===== */
+function injectTestMessages(){
+  if(!DEBUG)return;
+  const users=[
+    {n:'highman',c:'#53fc18',b:[{type:'broadcaster'},{type:'verified'}]},
+    {n:'razvwi',c:'#ff6b6b',b:[{type:'moderator'},{type:'sub_gifter',count:100}]},
+    {n:'godeanu',c:'#ffca3a',b:[{type:'moderator'},{type:'founder'},{type:'subscriber',months:12}]},
+    {n:'test_user',c:'#a970ff',b:[{type:'subscriber',months:3}]},
+  ];
+  users.forEach((u,i)=>{
+    setTimeout(()=>{
+      const el=document.createElement('div');el.className='msg';
+      const identity={badges:u.b,color:u.c};
+      el.innerHTML=`<span class="badges">${renderBadges(identity)}</span><span class="user" style="color:${u.c}">${u.n}</span><span class="colon">: </span>Test message ${i+1} ✓`;
+      add(el);
+    },i*400);
+  });
+  setTimeout(()=>evtEl('sub','★ subscription','<strong>test_user</strong> s-a abonat · 1 lună'),2000);
+}
+
+async function start(){
+  if(!SLUG){
+    log('No channel specified. Add ?channel=SLUG to URL',true);
+    injectTestMessages();
+    return;
+  }
+  log('Starting for channel: '+SLUG);
+
+  let crid=chatroomId, chid=channelId, uid=null;
+
+  // If IDs not in URL, try to fetch them
+  if(!crid||!chid){
+    log('Fetching IDs from Kick API...');
+    const ids=await fetchIds(SLUG);
+    if(ids){crid=ids.crid;chid=ids.chid;uid=ids.uid;}
+  } else {
+    // Even with IDs in URL, try to fetch channel data for sub badges
+    tryFetch(`https://kick.com/api/v2/channels/${SLUG}`).then(j=>{if(j)cacheSubBadges(j);});
+  }
+
+  if(!crid){
+    log('ERROR: Could not get chatroom ID for "'+SLUG+'". Go back to the setup page and click Caută again.',true);
+    injectTestMessages();
+    return;
+  }
+
+  log('IDs OK · crid='+crid+' · chid='+chid);
+  if(uid)load7tv(uid);
+  await connectPusher(crid, chid);
+
+  // If debug, inject some test messages to verify rendering even before real chat arrives
+  if(DEBUG)setTimeout(injectTestMessages,1500);
+}
+
+start();
+</script>
+</body>
+</html>

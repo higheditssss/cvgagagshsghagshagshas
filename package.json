@@ -1,0 +1,9 @@
+{
+  "name": "chat-overlay",
+  "version": "1.0.0",
+  "description": "Kick.com chat overlay with 7TV emotes",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'static site - no build needed'"
+  }
+}
