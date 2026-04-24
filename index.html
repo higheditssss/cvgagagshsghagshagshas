@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kick Chat Overlay — Setup</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@400;600;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Roboto:wght@400;500;700;900&family=Roboto+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700;800;900&family=Bebas+Neue&family=Exo+2:wght@400;600;700;800;900&family=Orbitron:wght@400;600;700;900&family=Black+Ops+One&family=Russo+One&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -153,7 +153,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   width:13px;height:13px;background:#fff;border-radius:50%;margin-top:-5px;}
 input[type=range]::-moz-range-thumb{width:13px;height:13px;background:#fff;border-radius:50%;border:none;}
 
-/* ============ SECTION LABEL ============ */
+/* ============ BUBBLE THEME PREVIEW ============ */
+.preview-chat.theme-bubble .msg{
+  padding:0;margin-bottom:7px;background:transparent !important;
+}
+.preview-chat.theme-bubble .msg .bubble-inner{
+  display:inline-flex;flex-direction:column;max-width:100%;
+  position:relative;overflow:hidden;border-radius:16px;
+  padding:7px 12px 8px;word-break:break-word;
+  background:linear-gradient(135deg,rgba(83,252,24,.18),rgba(31,139,255,.18)),rgba(20,20,30,.8);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 3px 14px rgba(0,0,0,.45);
+}
+.preview-chat.theme-bubble .msg .bubble-header{display:flex;align-items:center;gap:4px;margin-bottom:2px;}
+.preview-chat.theme-bubble .msg .bubble-header .user{font-size:10.5px;font-weight:800;}
+.preview-chat.theme-bubble .msg .bubble-text{font-size:13px;line-height:1.4;}
+
 .section-label{font-size:9.5px;font-weight:700;color:var(--mute-2);text-transform:uppercase;
   letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:8px;font-family:var(--mono);}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -284,34 +299,80 @@ input[type=range]::-moz-range-thumb{width:13px;height:13px;background:#fff;borde
   font-size:13px;line-height:1.5;
   border:1px solid rgba(255,255,255,.12);
   background:rgba(255,255,255,.05);}
-.preview-chat .evt.sub{background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.25);}
+.preview-chat .evt.sub{
+  background:linear-gradient(135deg,rgba(31,139,255,.18),rgba(31,139,255,.06));
+  border:1px solid rgba(31,139,255,.45);border-left:3px solid #4da3ff;
+  box-shadow:0 0 14px rgba(31,139,255,.12);
+  padding:0;overflow:hidden;}
 .preview-chat .evt.gift{background:rgba(255,202,58,.08);border-color:rgba(255,202,58,.25);}
 .preview-chat .evt.host{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.25);}
 .preview-chat .evt-head{font-size:9.5px;font-weight:800;letter-spacing:.8px;
   text-transform:uppercase;margin-bottom:5px;color:rgba(255,255,255,.5);}
-.preview-chat .evt.sub .evt-head{color:#38bdf8;}
 .preview-chat .evt.gift .evt-head{color:#ffca3a;}
 .preview-chat .evt.host .evt-head{color:#a78bfa;}
 .preview-chat .evt strong{color:#fff;font-weight:700;}
 
-/* animations */
-.anim-pop-in .msg,.anim-pop-in .evt{animation:pop .35s cubic-bezier(.34,1.4,.64,1);transform-origin:left bottom;}
-@keyframes pop{0%{opacity:0;transform:scale(.85) translateY(6px);}70%{opacity:1;transform:scale(1.02);}100%{transform:scale(1);}}
-.anim-slide-left .msg,.anim-slide-left .evt{animation:sl .3s cubic-bezier(.2,.8,.2,1);}
-@keyframes sl{from{opacity:0;transform:translateX(-16px);}to{opacity:1;transform:none;}}
-.anim-slide-up .msg,.anim-slide-up .evt{animation:su .3s cubic-bezier(.2,.8,.2,1);}
-@keyframes su{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
-.anim-fade .msg,.anim-fade .evt{animation:fade .25s ease-out;}
+/* sub card in preview */
+.preview-chat .sub-card{display:flex;align-items:center;gap:10px;padding:9px 13px;}
+.preview-chat .sub-avatar{width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,#1f8bff,#0055cc);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+  border:2px solid rgba(77,163,255,.45);}
+.preview-chat .sub-info{flex:1;min-width:0;}
+.preview-chat .sub-label{font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#4da3ff;margin-bottom:1px;}
+.preview-chat .sub-name{font-size:13px;font-weight:700;color:#fff;}
+.preview-chat .sub-detail{font-size:10px;color:rgba(255,255,255,.5);margin-top:1px;}
+.preview-chat .sub-badge-pill{background:rgba(31,139,255,.2);border:1px solid rgba(77,163,255,.3);
+  border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;color:#4da3ff;flex-shrink:0;}
+.preview-chat .sub-msg{padding:5px 13px 9px 57px;font-size:11px;color:rgba(255,255,255,.65);
+  font-style:italic;border-top:1px solid rgba(77,163,255,.15);}
+
+/* animations - entering state */
+.msg.entering,.evt.entering{opacity:0;transform:translateY(8px);}
+.msg,.evt{transition:opacity .2s ease,transform .22s cubic-bezier(.2,.8,.2,1);}
+/* badge shadow in preview */
+.preview-chat .msg .badge{filter:drop-shadow(0 1px 3px rgba(0,0,0,.9));}
+/* message text bold */
+.preview-chat .msg .txt{font-weight:700;color:#fff;}
+.preview-chat .msg .user{font-weight:900;}
+
+.anim-pop-in .msg:not(.entering),.anim-pop-in .evt:not(.entering){animation:pop .35s cubic-bezier(.34,1.4,.64,1);transform-origin:left bottom;}
+@keyframes pop{0%{opacity:0;transform:scale(.82) translateY(8px);}65%{opacity:1;transform:scale(1.03);}100%{transform:scale(1);}}
+.anim-slide-left .msg:not(.entering),.anim-slide-left .evt:not(.entering){animation:sl .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes sl{from{opacity:0;transform:translateX(-20px);}to{opacity:1;transform:none;}}
+.anim-slide-right .msg:not(.entering),.anim-slide-right .evt:not(.entering){animation:sr .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes sr{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:none;}}
+.anim-slide-up .msg:not(.entering),.anim-slide-up .evt:not(.entering){animation:su .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes su{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+.anim-fade .msg:not(.entering),.anim-fade .evt:not(.entering){animation:fade .3s ease-out;}
 @keyframes fade{from{opacity:0;}to{opacity:1;}}
-.anim-zoom .msg,.anim-zoom .evt{animation:zm .3s cubic-bezier(.2,.8,.2,1);}
-@keyframes zm{from{opacity:0;transform:scale(.4);}to{opacity:1;transform:scale(1);}}
-.anim-blur .msg,.anim-blur .evt{animation:bl .4s ease-out;}
-@keyframes bl{from{opacity:0;filter:blur(6px);}to{opacity:1;filter:blur(0);}}
-.anim-bounce .msg,.anim-bounce .evt{animation:bn .5s cubic-bezier(.68,-.55,.27,1.55);}
-@keyframes bn{0%{opacity:0;transform:translateY(20px);}50%{opacity:1;transform:translateY(-4px);}100%{transform:none;}}
-.anim-glitch .msg,.anim-glitch .evt{animation:gl .4s steps(5,end);}
-@keyframes gl{0%{opacity:0;transform:translate(-4px,0);}20%{opacity:.8;transform:translate(3px,-1px);}40%{opacity:.6;transform:translate(-2px,1px);filter:hue-rotate(90deg);}60%{opacity:.9;transform:translate(1px,0);}80%{opacity:1;transform:translate(-1px,0);}100%{opacity:1;transform:none;filter:none;}}
+.anim-zoom .msg:not(.entering),.anim-zoom .evt:not(.entering){animation:zm .3s cubic-bezier(.2,.8,.2,1);}
+@keyframes zm{from{opacity:0;transform:scale(.3);}to{opacity:1;transform:scale(1);}}
+.anim-blur .msg:not(.entering),.anim-blur .evt:not(.entering){animation:bl .4s ease-out;}
+@keyframes bl{from{opacity:0;filter:blur(10px);}to{opacity:1;filter:blur(0);}}
+.anim-bounce .msg:not(.entering),.anim-bounce .evt:not(.entering){animation:bn .55s cubic-bezier(.68,-.55,.27,1.55);}
+@keyframes bn{0%{opacity:0;transform:translateY(24px);}50%{opacity:1;transform:translateY(-6px);}100%{transform:none;}}
+.anim-glitch .msg:not(.entering),.anim-glitch .evt:not(.entering){animation:gl .4s steps(5,end);}
+@keyframes gl{0%{opacity:0;transform:translate(-4px,0);}20%{opacity:.8;transform:translate(4px,-1px);}40%{opacity:.6;transform:translate(-3px,1px);filter:hue-rotate(90deg);}60%{opacity:.9;transform:translate(2px,0);}80%{opacity:1;transform:translate(-1px,0);}100%{opacity:1;transform:none;filter:none;}}
+.anim-typewriter .msg:not(.entering),.anim-typewriter .evt:not(.entering){animation:tw .45s steps(22,end);}
+@keyframes tw{from{opacity:0;clip-path:inset(0 100% 0 0);}to{opacity:1;clip-path:inset(0 0% 0 0);}}
+.anim-flip .msg:not(.entering),.anim-flip .evt:not(.entering){animation:fp .4s cubic-bezier(.2,.8,.2,1);}
+@keyframes fp{from{opacity:0;transform:perspective(400px) rotateX(-80deg);}to{opacity:1;transform:perspective(400px) rotateX(0);}}
+.anim-shake .msg:not(.entering),.anim-shake .evt:not(.entering){animation:sk .5s ease;}
+@keyframes sk{0%{opacity:0;transform:translateX(-10px);}20%{opacity:1;transform:translateX(7px);}40%{transform:translateX(-5px);}60%{transform:translateX(4px);}80%{transform:translateX(-2px);}100%{transform:none;}}
+.anim-rise .msg:not(.entering),.anim-rise .evt:not(.entering){animation:rs .45s cubic-bezier(.2,.8,.2,1);}
+@keyframes rs{from{opacity:0;transform:translateY(120%);filter:blur(3px);}60%{opacity:1;}to{opacity:1;transform:none;filter:none;}}
+.anim-swing .msg:not(.entering),.anim-swing .evt:not(.entering){animation:sw .5s cubic-bezier(.2,.8,.2,1);transform-origin:top left;}
+@keyframes sw{0%{opacity:0;transform:rotate(-10deg) translateY(-10px);}60%{opacity:1;transform:rotate(2deg);}100%{transform:rotate(0);}}
+.anim-neon .msg:not(.entering),.anim-neon .evt:not(.entering){animation:nn .55s ease;}
+@keyframes nn{0%{opacity:0;filter:brightness(0) blur(6px);}35%{opacity:.6;filter:brightness(3) blur(2px);}65%{opacity:1;filter:brightness(1.8) blur(0);}100%{filter:brightness(1);}}
+.anim-drop .msg:not(.entering),.anim-drop .evt:not(.entering){animation:dr .35s cubic-bezier(.4,-0.3,.2,1.4);}
+@keyframes dr{from{opacity:0;transform:translateY(-20px) scale(.95);}to{opacity:1;transform:none;}}
+.anim-roll .msg:not(.entering),.anim-roll .evt:not(.entering){animation:ro .4s cubic-bezier(.2,.8,.2,1);}
+@keyframes ro{from{opacity:0;transform:translateX(-16px) rotate(-3deg);}to{opacity:1;transform:none;}}
 .anim-none .msg,.anim-none .evt{animation:none;}
+
+
 
 .preview-foot{padding:9px 16px;border-top:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
@@ -496,10 +557,22 @@ input[type=range]::-moz-range-thumb{width:13px;height:13px;background:#fff;borde
         </div>
       </div>
 
-      <!-- 7. OBS link -->
+      <!-- 7. Temă -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-head">
+          <h2>7 · Temă</h2>
+          <span class="sub">stilul mesajelor</span>
+        </div>
+        <div class="card-body">
+          <div class="anim-grid" id="themeGrid" style="grid-template-columns:repeat(2,1fr);"></div>
+          <div class="hint" style="margin-top:10px;">Tema <b>Bubble</b> afișează poza <b>pedro.png</b> pe fiecare mesaj · plasează fișierul lângă overlay.html</div>
+        </div>
+      </div>
+
+      <!-- 8. OBS link -->
       <div class="card">
         <div class="card-head">
-          <h2>7 · Link OBS</h2>
+          <h2>8 · Link OBS</h2>
           <span class="sub">browser source</span>
         </div>
         <div class="card-body">
@@ -510,6 +583,45 @@ input[type=range]::-moz-range-thumb{width:13px;height:13px;background:#fff;borde
             </div>
             <div class="hint">
               OBS → <b>+ Browser Source</b> → URL → setează dimensiunile de mai sus
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Prediction Overlay -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-head">
+          <h2>9 · Prediction Overlay</h2>
+          <span class="sub" id="predStatusLabel">—</span>
+        </div>
+        <div class="card-body">
+          <div class="field" style="margin-bottom:12px;">
+            <div class="input-group">
+              <input type="text" id="predUrl" readonly placeholder="linkul apare după Caută" style="font-size:11px;">
+              <button class="btn ghost" id="btnCopyPred">Copy</button>
+            </div>
+            <div class="hint">Browser Source separat · <b>420 × 280px</b> · <b>prediction.html</b></div>
+          </div>
+          <!-- live prediction view -->
+          <div id="predEmpty" style="font-size:11px;color:var(--mute-2);font-family:var(--mono);padding:4px 0;">Caută un canal pentru predicții live.</div>
+          <div id="predLive" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div id="predBadge" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(83,252,24,.1);border:1px solid rgba(83,252,24,.25);color:#53fc18;">LIVE</div>
+              <div style="font-size:10px;color:var(--mute-2);font-family:var(--mono);" id="predUpdated">—</div>
+            </div>
+            <div id="predQ" style="font-size:13px;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4;"></div>
+            <div id="predPctRow" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span id="predPctA" style="font-size:22px;font-weight:900;color:#53fc18;">0%</span>
+              <span style="color:rgba(255,255,255,.3);font-size:12px;">vs</span>
+              <span id="predPctB" style="font-size:22px;font-weight:900;color:#ff3b5c;">0%</span>
+            </div>
+            <div style="height:3px;background:var(--border-2);border-radius:2px;overflow:hidden;margin-bottom:12px;">
+              <div id="predBarFill" style="height:100%;background:#53fc18;transition:width .6s ease;width:50%;"></div>
+            </div>
+            <div id="predOptsList" style="display:flex;flex-direction:column;gap:6px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+              <div style="font-size:10px;color:var(--mute-2);">Total: <span id="predTotalVotes" style="color:#fff;font-weight:700;">0</span></div>
+              <button class="btn ghost" style="font-size:10px;padding:4px 10px;" id="btnRefreshPred">↻ Refresh</button>
             </div>
           </div>
         </div>
@@ -549,12 +661,21 @@ input[type=range]::-moz-range-thumb{width:13px;height:13px;background:#fff;borde
 const ANIMS=[
   {id:'pop-in',name:'Pop In'},
   {id:'slide-left',name:'Slide ←'},
+  {id:'slide-right',name:'Slide →'},
   {id:'slide-up',name:'Slide ↑'},
   {id:'fade',name:'Fade'},
   {id:'zoom',name:'Zoom'},
   {id:'blur',name:'Blur'},
   {id:'bounce',name:'Bounce'},
   {id:'glitch',name:'Glitch'},
+  {id:'typewriter',name:'Typewriter'},
+  {id:'flip',name:'Flip'},
+  {id:'shake',name:'Shake'},
+  {id:'rise',name:'Rise'},
+  {id:'swing',name:'Swing'},
+  {id:'neon',name:'Neon'},
+  {id:'drop',name:'Drop'},
+  {id:'roll',name:'Roll'},
   {id:'none',name:'None'},
 ];
 
@@ -566,6 +687,12 @@ const FONTS=[
   {id:'Roboto',label:'Roboto',stack:'Roboto'},
   {id:'Oswald',label:'Oswald',stack:'Oswald'},
   {id:'Rajdhani',label:'Rajdhani',stack:'Rajdhani'},
+  {id:'BarlowCondensed',label:'Barlow',stack:'Barlow Condensed'},
+  {id:'BebasNeue',label:'Bebas',stack:'Bebas Neue'},
+  {id:'Exo2',label:'Exo 2',stack:'Exo 2'},
+  {id:'Orbitron',label:'Orbitron',stack:'Orbitron'},
+  {id:'BlackOpsOne',label:'Black Ops',stack:'Black Ops One'},
+  {id:'RussoOne',label:'Russo',stack:'Russo One'},
   {id:'JetBrainsMono',label:'JetBrains',stack:'JetBrains Mono'},
   {id:'RobotoMono',label:'Mono',stack:'Roboto Mono'},
 ];
@@ -609,6 +736,7 @@ let currentShcolor=localStorage.getItem('shcolor')||'rgba(0,0,0,0.85)';
 let currentSizeId=localStorage.getItem('sizeId')||'chat';
 let currentW=parseInt(localStorage.getItem('sizeW')||'420');
 let currentH=parseInt(localStorage.getItem('sizeH')||'720');
+let currentTheme=localStorage.getItem('theme')||'default';
 let foundCrid=null,foundChid=null;
 let autoHide=localStorage.getItem('autoHide')!=='0';
 let hideSec=parseInt(localStorage.getItem('hideSec')||'10');
@@ -621,25 +749,25 @@ const animLabel=document.getElementById('animLabel');
 
 /* ===== KICK BADGES ===== */
 const KICK_BADGES={
-  'broadcaster':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzUzRkMxOCIvPjxwYXRoIGQ9Ik00IDdsNS0zIDUgM3Y0YzAgMi0yIDMuNS01IDQtMy0uNS01LTItNS00Vjd6IiBmaWxsPSIjMWExYTFhIi8+PHBhdGggZD0iTTYuNSA5bDEuNSAxLjVMMTEgNyIgc3Ryb2tlPSIjNTNGQzE4IiBzdHJva2Utd2lkdGg9IjEuNCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+',
-  'moderator':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzUzRkMxOCIvPjxsaW5lIHgxPSI5IiB5MT0iMy41IiB4Mj0iOSIgeTI9IjEyIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGxpbmUgeDE9IjYiIHkxPSI3LjUiIHgyPSIxMiIgeTI9IjcuNSIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBvbHlnb24gcG9pbnRzPSI4LDMgOSwxLjUgMTAsMyIgZmlsbD0iIzFhMWExYSIvPjxjaXJjbGUgY3g9IjkiIGN5PSIxMy41IiByPSIxLjMiIGZpbGw9IiMxYTFhMWEiLz48L3N2Zz4=',
-  'vip':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzdDM0FFRCIvPjxwYXRoIGQ9Ik0zLjUgNi41TDkgMTQgMTQuNSA2LjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTMuNSA2LjVMNiA0IDkgNi41IDEyIDQgMTQuNSA2LjUiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+',
-  'og':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0ZGNkIzNSIvPjxwYXRoIGQ9Ik05IDMuNWwxLjUgMyAzLjMuNS0yLjQgMi4zLjYgMy4yTDkgMTEuMWwtMyAxLjQuNi0zLjJMNC4yIDdsMy4zLS41eiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=',
-  'founder':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0Q5NzcwNiIvPjxwYXRoIGQ9Ik00LjUgMTNWNS41TDcgNy41IDkgNC41bDIgMyAyLjUtMlYxMyIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxsaW5lIHgxPSI0LjUiIHkxPSIxMyIgeDI9IjEzLjUiIHkyPSIxMyIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==',
-  'subscriber':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzUzRkMxOCIvPjxwYXRoIGQ9Ik05IDEzLjVTNCAxMCA0IDYuNUM0IDUgNS4xIDQgNi41IDRjMSAwIDEuOS42IDIuNSAxLjVDOS42IDQuNiAxMC41IDQgMTEuNSA0IDEyLjkgNCAxNCA1IDE0IDYuNWMwIDMuNS01IDctNSA3WiIgZmlsbD0iIzFhMWExYSIvPjwvc3ZnPg==',
-  'sub_gifter':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0VDNDg5OSIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz48cmVjdCB4PSIzLjUiIHk9IjYiIHdpZHRoPSIxMSIgaGVpZ2h0PSIyLjUiIHJ4PSIwLjUiIGZpbGw9IndoaXRlIi8+PGxpbmUgeDE9IjkiIHkxPSI2IiB4Mj0iOSIgeTI9IjE0LjUiIHN0cm9rZT0iI0VDNDg5OSIgc3Ryb2tlLXdpZHRoPSIxLjMiLz48cGF0aCBkPSJNOSA2QzkgNiA3LjIgNS4yIDYuOCAzLjhjLS4zLS45LjUtMS41IDEuMi0uOEM4LjUgMy41IDkgNiA5IDZaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik05IDZDOSA2IDEwLjggNS4yIDExLjIgMy44Yy4zLS45LS41LTEuNS0xLjItLjhDOS41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=',
-  'sub_gifter_25':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0VDNDg5OSIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiNFQzQ4OTkiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy44IiBmaWxsPSIjRUM0ODk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj4yNTwvdGV4dD48L3N2Zz4=',
-  'sub_gifter_50':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzhCNUNGNiIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiM4QjVDRjYiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy44IiBmaWxsPSIjOEI1Q0Y2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj41MDwvdGV4dD48L3N2Zz4=',
-  'sub_gifter_100':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0Q5NzcwNiIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiNEOTc3MDYiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy4yIiBmaWxsPSIjRDk3NzA2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj4xMDA8L3RleHQ+PC9zdmc+',
-  'sub_gifter_200':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0VGNDQ0NCIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiNFRjQ0NDQiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy4yIiBmaWxsPSIjRUY0NDQ0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj4yMDA8L3RleHQ+PC9zdmc+',
-  'verified':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PGNpcmNsZSBjeD0iOSIgY3k9IjkiIHI9IjkiIGZpbGw9IiMxRDlCRjAiLz48cGF0aCBkPSJNNSA5bDIuNSAyLjVMMTMgNyIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=',
-  'staff':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzUzRkMxOCIvPjx0ZXh0IHg9IjkiIHk9IjEzLjUiIGZvbnQtc2l6ZT0iMTEiIGZpbGw9IiMwMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtd2VpZ2h0PSI5MDAiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjayxBcmlhbCxzYW5zLXNlcmlmIj5LPC90ZXh0Pjwvc3ZnPg==',
-  'sidekick':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzUzRkMxOCIvPjxwYXRoIGQ9Ik01IDVoMi41bDIgNCAyLTRIMTRMMTAuNSA5LjVsMyAzLjVIMTFsLTItMy0yIDNINC41bDMtMy41eiIgZmlsbD0iIzFhMWExYSIvPjwvc3ZnPg==',
-  'subgifter':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0VDNDg5OSIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz48cmVjdCB4PSIzLjUiIHk9IjYiIHdpZHRoPSIxMSIgaGVpZ2h0PSIyLjUiIHJ4PSIwLjUiIGZpbGw9IndoaXRlIi8+PGxpbmUgeDE9IjkiIHkxPSI2IiB4Mj0iOSIgeTI9IjE0LjUiIHN0cm9rZT0iI0VDNDg5OSIgc3Ryb2tlLXdpZHRoPSIxLjMiLz48cGF0aCBkPSJNOSA2QzkgNiA3LjIgNS4yIDYuOCAzLjhjLS4zLS45LjUtMS41IDEuMi0uOEM4LjUgMy41IDkgNiA5IDZaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik05IDZDOSA2IDEwLjggNS4yIDExLjIgMy44Yy4zLS45LS41LTEuNS0xLjItLjhDOS41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=',
-  'subgifter25':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0VDNDg5OSIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiNFQzQ4OTkiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy44IiBmaWxsPSIjRUM0ODk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj4yNTwvdGV4dD48L3N2Zz4=',
-  'subgifter50':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iIzhCNUNGNiIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiM4QjVDRjYiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy44IiBmaWxsPSIjOEI1Q0Y2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj41MDwvdGV4dD48L3N2Zz4=',
-  'subgifter100':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0Q5NzcwNiIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiNEOTc3MDYiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy4yIiBmaWxsPSIjRDk3NzA2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj4xMDA8L3RleHQ+PC9zdmc+',
-  'subgifter200':'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOCAxOCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iNCIgZmlsbD0iI0VGNDQ0NCIvPjxyZWN0IHg9IjMuNSIgeT0iOCIgd2lkdGg9IjExIiBoZWlnaHQ9IjYuNSIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjg1Ii8+PHJlY3QgeD0iMy41IiB5PSI2IiB3aWR0aD0iMTEiIGhlaWdodD0iMi41IiByeD0iMC41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC45NSIvPjxsaW5lIHgxPSI5IiB5MT0iNiIgeDI9IjkiIHkyPSIxNC41IiBzdHJva2U9IiNFRjQ0NDQiIHN0cm9rZS13aWR0aD0iMS4zIi8+PHBhdGggZD0iTTkgNkM5IDYgNy4yIDUuMiA2LjggMy44Yy0uMy0uOS41LTEuNSAxLjItLjhDOC41IDMuNSA5IDYgOSA2WiIgZmlsbD0id2hpdGUiLz48cGF0aCBkPSJNOSA2QzkgNiAxMC44IDUuMiAxMS4yIDMuOGMuMy0uOS0uNS0xLjUtMS4yLS44QzkuNSAzLjUgOSA2IDkgNloiIGZpbGw9IndoaXRlIi8+PHRleHQgeD0iOSIgeT0iMTMiIGZvbnQtc2l6ZT0iMy4yIiBmaWxsPSIjRUY0NDQ0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1mYW1pbHk9IkFyaWFsIj4yMDA8L3RleHQ+PC9zdmc+',
+  'broadcaster':'https://www.kickdatabase.com/kickBadges/broadcaster.svg',
+  'moderator':'https://www.kickdatabase.com/kickBadges/moderator.svg',
+  'vip':'https://www.kickdatabase.com/kickBadges/vip.svg',
+  'og':'https://www.kickdatabase.com/kickBadges/og.svg',
+  'founder':'https://www.kickdatabase.com/kickBadges/founder.svg',
+  'subscriber':'https://www.kickdatabase.com/kickBadges/subscriber.svg',
+  'sub_gifter':'https://www.kickdatabase.com/kickBadges/subGifter.svg',
+  'subgifter':'https://www.kickdatabase.com/kickBadges/subGifter.svg',
+  'subgifter25':'https://www.kickdatabase.com/kickBadges/subGifter25.svg',
+  'subgifter50':'https://www.kickdatabase.com/kickBadges/subGifter50.svg',
+  'subgifter100':'https://www.kickdatabase.com/kickBadges/subGifter100.svg',
+  'subgifter200':'https://www.kickdatabase.com/kickBadges/subGifter200.svg',
+  'sub_gifter_25':'https://www.kickdatabase.com/kickBadges/subGifter25.svg',
+  'sub_gifter_50':'https://www.kickdatabase.com/kickBadges/subGifter50.svg',
+  'sub_gifter_100':'https://www.kickdatabase.com/kickBadges/subGifter100.svg',
+  'sub_gifter_200':'https://www.kickdatabase.com/kickBadges/subGifter200.svg',
+  'verified':'https://www.kickdatabase.com/kickBadges/verified.svg',
+  'staff':'https://www.kickdatabase.com/kickBadges/staff.svg',
+  'sidekick':'https://www.kickdatabase.com/kickBadges/sidekick.svg',
 };
 
 /* ===== MOCK DATA — exact usernames requested ===== */
@@ -683,9 +811,30 @@ const MOCK_MSGS=[
 function e(){return`<span class="emote-placeholder">${EMOTE_NAMES[Math.floor(Math.random()*EMOTE_NAMES.length)]}</span>`;}
 
 const MOCK_EVENTS=[
-  {cls:'',    head:'★ subscription',  body:'<strong>OviP206</strong> s-a abonat · 3 luni'},
+  // sub card real — identic cu overlay
+  {cls:'sub', html:`
+    <div class="sub-card">
+      <div class="sub-avatar">⭐</div>
+      <div class="sub-info">
+        <div class="sub-label">★ new sub</div>
+        <div class="sub-name">w2ge</div>
+        <div class="sub-detail">subscriber nou</div>
+      </div>
+      <div class="sub-badge-pill">x1</div>
+    </div>`},
+  // resub card real
+  {cls:'sub', html:`
+    <div class="sub-card">
+      <div class="sub-avatar">🔁</div>
+      <div class="sub-info">
+        <div class="sub-label">★ resub</div>
+        <div class="sub-name">OviP206</div>
+        <div class="sub-detail">resub · 3 luni consecutive</div>
+      </div>
+      <div class="sub-badge-pill">x3</div>
+    </div>
+    <div class="sub-msg">💬 PogChamp cel mai bun stream!</div>`},
   {cls:'gift',head:'🎁 gifted subs',  body:'<strong>razvwi</strong> a dăruit <strong>5</strong> subs → poseidonn99, w2ge, OviP206'},
-  {cls:'sub', head:'★ subscription',  body:'<strong>w2ge</strong> s-a abonat · 1 lună'},
   {cls:'host',head:'⚔ raid',          body:'<strong>highman_edits</strong> · 142 viewers'},
   {cls:'gift',head:'🎁 gifted subs',  body:'<strong>highman</strong> a dăruit <strong>10</strong> subs'},
 ];
@@ -704,7 +853,11 @@ function buildMockMsg(){
   const el=document.createElement('div');
   el.className='msg';
   el.style.textShadow=sh;
-  el.innerHTML=`${badges?`<span class="badges">${badges}</span>`:''}<span class="user" style="color:${u.c};text-shadow:${sh}">${u.n}</span><span class="colon">: </span>${text}`;
+  if(currentTheme==='bubble'){
+    el.innerHTML=`<div class="bubble-inner"><div class="bubble-header">${badges?`<span class="badges">${badges}</span>`:''}<span class="user" style="color:${u.c};font-weight:900">${u.n}</span></div><div class="bubble-text" style="font-weight:700">${text}</div></div>`;
+  } else {
+    el.innerHTML=`${badges?`<span class="badges">${badges}</span>`:''}<span class="user" style="color:${u.c};font-weight:900;text-shadow:${sh}">${u.n}</span><span class="colon" style="color:rgba(255,255,255,.35);margin:0 1px">: </span><span class="txt" style="font-weight:700;text-shadow:${sh}">${text}</span>`;
+  }
   return el;
 }
 
@@ -713,7 +866,11 @@ function buildMockEvt(){
   const el=document.createElement('div');
   el.className='evt '+ev.cls;
   el.style.textShadow=`${currentShx}px ${currentShy}px ${currentShblur}px ${currentShcolor}`;
-  el.innerHTML=`<div class="evt-head">${ev.head}</div><div class="evt-body">${ev.body}</div>`;
+  if(ev.html){
+    el.innerHTML=ev.html;
+  } else {
+    el.innerHTML=`<div class="evt-head">${ev.head}</div><div class="evt-body">${ev.body}</div>`;
+  }
   return el;
 }
 
@@ -721,7 +878,10 @@ const PREVIEW_MAX=10;
 let previewTimer=null;
 
 function addToPreview(el){
+  el.classList.add('entering');
   previewChat.appendChild(el);
+  el.getBoundingClientRect(); // force reflow
+  requestAnimationFrame(()=>el.classList.remove('entering'));
   while(previewChat.children.length>PREVIEW_MAX)previewChat.removeChild(previewChat.firstChild);
 }
 
@@ -818,6 +978,24 @@ document.getElementById('sizeH').addEventListener('input',function(){
   updateUrl();
 });
 
+/* ===== THEME GRID ===== */
+const THEMES=[
+  {id:'default',name:'Default',desc:'text simplu'},
+  {id:'bubble',name:'💬 Bubble',desc:'chat bubble + pedro'},
+];
+function buildThemeGrid(){
+  const g=document.getElementById('themeGrid');
+  g.innerHTML=THEMES.map(t=>`<button class="anim-btn${t.id===currentTheme?' active':''}" data-id="${t.id}"><div style="font-size:13px;margin-bottom:2px;">${t.name}</div><div style="font-size:9px;opacity:.5;font-family:var(--mono);">${t.desc}</div></button>`).join('');
+  g.querySelectorAll('.anim-btn').forEach(b=>{
+    b.onclick=()=>{
+      currentTheme=b.dataset.id;
+      localStorage.setItem('theme',currentTheme);
+      g.querySelectorAll('.anim-btn').forEach(x=>x.classList.toggle('active',x.dataset.id===currentTheme));
+      previewChat.classList.toggle('theme-bubble',currentTheme==='bubble');
+      updateUrl();
+    };
+  });
+}
 /* ===== ANIM GRID ===== */
 function buildAnimGrid(){
   const g=document.getElementById('animGrid');
@@ -951,6 +1129,7 @@ function updateUrl(){
   url+='&w='+currentW+'&h='+currentH;
   if(!autoHide)url+='&hide=0';
   else if(hideSec!==10)url+='&hide='+hideSec;
+  if(currentTheme&&currentTheme!=='default')url+='&theme='+currentTheme;
   document.getElementById('obsUrl').value=url;
 }
 
@@ -1007,6 +1186,8 @@ document.getElementById('btnLoad').onclick=async()=>{
     if(ids){
       setStatus('ok','Canal găsit ✓ · gata pentru OBS',ids.crid,ids.chid);
       updateUrl();
+      updatePredUrl();
+      startPredPoll();
     }else{
       setStatus('err','');
       statusTxt.innerHTML=`Negăsit automat. <a href="https://kick.com/${slug}" target="_blank" style="color:#fff;opacity:.7">Verifică kick.com/${slug}</a>`+
@@ -1042,6 +1223,101 @@ document.getElementById('btnCopy').onclick=function(){
 document.getElementById('btnReplay').onclick=restartPreview;
 document.getElementById('btnEvt').onclick=()=>addToPreview(buildMockEvt());
 
+/* ===== PREDICTION ===== */
+let predPollTimer=null;
+let foundSlug='';
+
+function updatePredUrl(){
+  const slug=(document.getElementById('ch').value||'').trim().toLowerCase();
+  const el=document.getElementById('predUrl');
+  if(!slug||!foundCrid){el.value='';return;}
+  const base=location.origin+location.pathname.replace(/\/?index(\.html)?$/,'').replace(/\/$/,'');
+  el.value=`${base}/prediction?channel=${encodeURIComponent(slug)}&cid=${foundCrid}`;
+}
+
+async function fetchPrediction(){
+  const slug=(document.getElementById('ch').value||'').trim().toLowerCase();
+  if(!slug)return;
+  const urls=[`https://kick.com/api/v2/channels/${slug}/predictions/latest`];
+  const proxies=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`];
+  let data=null;
+  for(const url of urls){
+    try{const r=await fetch(url,{signal:AbortSignal.timeout(5000)});if(r.ok){data=await r.json();break;}}catch(e){}
+    for(const px of proxies){
+      try{const r=await fetch(px(url),{signal:AbortSignal.timeout(5000)});if(r.ok){const t=await r.text();try{data=JSON.parse(t);break;}catch(e){}}break;}catch(e){}
+    }
+    if(data)break;
+  }
+  renderPredCard(data);
+  document.getElementById('predUpdated').textContent=new Date().toLocaleTimeString('ro');
+}
+
+function renderPredCard(data){
+  if(!data){
+    document.getElementById('predEmpty').style.display='block';
+    document.getElementById('predLive').style.display='none';
+    document.getElementById('predStatusLabel').textContent='—';
+    return;
+  }
+  document.getElementById('predEmpty').style.display='none';
+  document.getElementById('predLive').style.display='block';
+
+  const opts=data.options||data.outcomes||[];
+  const o0=opts[0]||{},o1=opts[1]||{};
+  const v0=o0.total_amount||o0.points||o0.total_users||0;
+  const v1=o1.total_amount||o1.points||o1.total_users||0;
+  const total=v0+v1||1;
+  const p0=Math.round(v0/total*100),p1=100-p0;
+  const st=data.status||data.state||'active';
+  const isOpen=st==='active'||st==='open';
+  const isResolved=st==='resolved'||st==='resulted';
+  const winId=data.winning_outcome_id??data.winner_id??null;
+
+  document.getElementById('predQ').textContent=data.title||data.question||'—';
+  document.getElementById('predPctA').textContent=p0+'%';
+  document.getElementById('predPctB').textContent=p1+'%';
+  document.getElementById('predBarFill').style.width=p0+'%';
+  document.getElementById('predTotalVotes').textContent=(v0+v1).toLocaleString()+' voturi';
+  document.getElementById('predStatusLabel').textContent=st;
+
+  const badge=document.getElementById('predBadge');
+  if(isResolved){badge.textContent='FINAL';badge.style.cssText='font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(255,202,58,.1);border:1px solid rgba(255,202,58,.3);color:#ffca3a;';}
+  else if(!isOpen){badge.textContent='ÎNCHIS';badge.style.cssText='font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(255,59,92,.1);border:1px solid rgba(255,59,92,.25);color:#ff3b5c;';}
+  else{badge.textContent='LIVE';badge.style.cssText='font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(83,252,24,.1);border:1px solid rgba(83,252,24,.25);color:#53fc18;';}
+
+  document.getElementById('predOptsList').innerHTML=opts.slice(0,2).map((o,i)=>{
+    const v=o.total_amount||o.points||o.total_users||0;
+    const pct=i===0?p0:p1;
+    const isWin=winId!==null&&(o.id===winId||winId===i||winId===String(i));
+    const col=i===0?'#53fc18':'#ff3b5c';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)${isWin?';outline:1px solid '+col:''};">
+      <div style="width:22px;height:22px;border-radius:50%;background:${col};color:${i===0?'#000':'#fff'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;">${i+1}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${o.title||o.label||'Opțiunea '+(i+1)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;">${v.toLocaleString()} voturi</div>
+      </div>
+      <div style="font-size:16px;font-weight:900;color:${col};">${pct}%</div>
+      ${isWin?`<div style="color:${col};font-size:16px;">✓</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('btnCopyPred').onclick=function(){
+  const val=document.getElementById('predUrl').value;
+  if(!val)return;
+  navigator.clipboard.writeText(val);
+  this.textContent='✓ Copiat';
+  setTimeout(()=>{this.textContent='Copy';},1800);
+};
+
+document.getElementById('btnRefreshPred').onclick=fetchPrediction;
+
+function startPredPoll(){
+  if(predPollTimer)clearInterval(predPollTimer);
+  fetchPrediction();
+  predPollTimer=setInterval(fetchPrediction,10000);
+}
+
 /* ===== INIT ===== */
 const saved=localStorage.getItem('ch');
 if(saved){document.getElementById('ch').value=saved;}
@@ -1053,10 +1329,11 @@ document.getElementById('fsDisplay').textContent=currentFs+'px';
 buildSizePresets();
 buildAnimGrid();
 buildFontGrid();
+buildThemeGrid();
 markShadowActive=buildShadowPresets();
 buildShadowColorSwatches();
 initShadowSliders();
-previewChat.className='preview-chat anim-'+currentAnim;
+previewChat.className='preview-chat anim-'+currentAnim+(currentTheme==='bubble'?' theme-bubble':'');
 animLabel.textContent=currentAnim;
 applyPreviewStyle();
 startPreview();

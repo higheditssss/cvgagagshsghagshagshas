@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>Prediction Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+html,body{width:100%;height:100%;background:transparent !important;
+  font-family:'Inter',system-ui,sans-serif;overflow:hidden;color:#fff;}
+body.standalone{background:#0d0d0d !important;}
+
+#wrap{position:fixed;bottom:0;left:0;right:0;padding:10px 10px 12px;display:none;}
+#wrap.show{display:block;animation:slideIn .4s cubic-bezier(.2,.8,.2,1);}
+#wrap.hiding{animation:slideOut .3s ease forwards !important;}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
+@keyframes slideOut{to{opacity:0;transform:translateY(12px);}}
+
+.card{background:#111318;border:1px solid rgba(255,255,255,.1);border-radius:14px;
+  overflow:hidden;box-shadow:0 6px 40px rgba(0,0,0,.7);}
+
+.top{padding:14px 16px 0;}
+.pred-title{font-size:13px;font-weight:700;color:#fff;text-align:center;margin-bottom:3px;line-height:1.35;}
+.pred-pts{font-size:11px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:13px;}
+
+.vs-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;}
+.vs-a{font-size:30px;font-weight:900;color:#53fc18;letter-spacing:-.02em;}
+.vs-sep{font-size:13px;font-weight:600;color:rgba(255,255,255,.3);}
+.vs-b{font-size:30px;font-weight:900;color:#ff3b5c;letter-spacing:-.02em;}
+
+.bar-wrap{height:3px;background:rgba(255,255,255,.08);margin:0 0 14px;}
+.bar-fill{height:100%;background:#53fc18;transition:width .8s cubic-bezier(.2,.8,.2,1);}
+
+.opts-label{padding:4px 16px 6px;font-size:9px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(255,255,255,.28);}
+
+.opt{display:flex;align-items:center;gap:12px;padding:11px 16px;
+  background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.05);}
+.opt.winner{background:rgba(255,255,255,.08);}
+.opt-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.opt:nth-child(1) .opt-num{background:#53fc18;color:#000;}
+.opt:nth-child(2) .opt-num{background:#ff3b5c;color:#fff;}
+.opt-body{flex:1;min-width:0;}
+.opt-title{font-size:13px;font-weight:700;color:#fff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.opt-meta{display:flex;align-items:center;gap:12px;}
+.opt-votes{font-size:11px;color:rgba(255,255,255,.38);display:flex;align-items:center;gap:4px;}
+.opt-pct-mini{font-size:11px;color:rgba(255,255,255,.38);display:flex;align-items:center;gap:4px;}
+.opt-check{font-size:18px;color:#53fc18;flex-shrink:0;opacity:0;transform:scale(.5);
+  transition:opacity .3s ease,transform .3s cubic-bezier(.34,1.4,.64,1);}
+.opt.winner .opt-check{opacity:1;transform:scale(1);}
+
+.status{text-align:center;padding:9px 16px 11px;font-size:11px;font-weight:700;
+  color:rgba(255,255,255,.35);letter-spacing:.05em;text-transform:uppercase;
+  border-top:1px solid rgba(255,255,255,.06);}
+.status.open{color:#53fc18;}
+.status.closed{color:#ff3b5c;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="card">
+    <div class="top">
+      <div class="pred-title" id="predTitle">—</div>
+      <div class="pred-pts" id="predPts">0 points contributed</div>
+      <div class="vs-row">
+        <span class="vs-a" id="pctA">0%</span>
+        <span class="vs-sep">vs</span>
+        <span class="vs-b" id="pctB">0%</span>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" id="barFill" style="width:50%"></div></div>
+    </div>
+    <div class="opts-label">Options</div>
+    <div id="optsList"></div>
+    <div class="status" id="statusBar">Predictions open</div>
+  </div>
+</div>
+<script>
+const qp=new URLSearchParams(location.search);
+const SLUG=(qp.get('channel')||'').toLowerCase();
+const CID=qp.get('cid')||null;
+const DEBUG=qp.get('debug')==='1';
+if(!SLUG&&!CID)document.body.classList.add('standalone');
+
+const wrap=document.getElementById('wrap');
+let hideTimer=null;
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function showPred(data,forceStatus){
+  const opts=data.options||data.outcomes||[];
+  const o0=opts[0]||{},o1=opts[1]||{};
+  const v0=o0.total_amount||o0.points||o0.total_users||0;
+  const v1=o1.total_amount||o1.points||o1.total_users||0;
+  const total=v0+v1||1;
+  const p0=Math.round(v0/total*100),p1=100-p0;
+  const winId=data.winning_outcome_id??data.winner_id??null;
+
+  document.getElementById('predTitle').textContent=data.title||data.question||'Predicție';
+  document.getElementById('predPts').textContent=(v0+v1).toLocaleString()+' points contributed';
+  document.getElementById('pctA').textContent=p0+'%';
+  document.getElementById('pctB').textContent=p1+'%';
+  document.getElementById('barFill').style.width=p0+'%';
+
+  document.getElementById('optsList').innerHTML=opts.slice(0,2).map((o,i)=>{
+    const v=o.total_amount||o.points||o.total_users||0;
+    const pct=i===0?p0:p1;
+    const isWin=winId!==null&&(o.id===winId||winId===i||winId===String(i));
+    return `<div class="opt${isWin?' winner':''}">
+      <div class="opt-num">${i+1}</div>
+      <div class="opt-body">
+        <div class="opt-title">${esc(o.title||o.label||'Opțiunea '+(i+1))}</div>
+        <div class="opt-meta">
+          <span class="opt-votes">🔸 ${v.toLocaleString()}</span>
+          <span class="opt-pct-mini">📊 ${pct}%</span>
+        </div>
+      </div>
+      <div class="opt-check">✓</div>
+    </div>`;
+  }).join('');
+
+  const st=forceStatus||data.status||data.state||'active';
+  const isOpen=st==='active'||st==='open';
+  const isResolved=st==='resolved'||st==='resulted';
+  const sb=document.getElementById('statusBar');
+  sb.className='status '+(isOpen?'open':'closed');
+  sb.textContent=isOpen?'Predictions open':'Predictions closed';
+
+  wrap.classList.remove('hiding');
+  wrap.classList.add('show');
+  if(hideTimer)clearTimeout(hideTimer);
+  if(isResolved)hideTimer=setTimeout(hidePred,10000);
+}
+
+function hidePred(){
+  if(hideTimer)clearTimeout(hideTimer);
+  wrap.classList.add('hiding');
+  setTimeout(()=>wrap.classList.remove('show','hiding'),360);
+}
+
+function loadPusher(){
+  return new Promise((res,rej)=>{
+    if(window.Pusher)return res();
+    const s=document.createElement('script');
+    s.src='https://js.pusher.com/7.0/pusher.min.js';
+    s.onload=res;s.onerror=rej;document.head.appendChild(s);
+  });
+}
+
+async function tryProxy(url){
+  try{const r=await fetch(url,{signal:AbortSignal.timeout(5000)});if(r.ok){const j=await r.json();if(j&&j.id)return j;}}catch(e){}
+  for(const px of[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]){
+    try{const r=await fetch(px(url),{signal:AbortSignal.timeout(6000)});if(r.ok){const t=await r.text();try{const j=JSON.parse(t);if(j&&j.id)return j;}catch(e){}}}catch(e){}
+  }
+  return null;
+}
+
+function handleEvent(name,d){
+  if(name.startsWith('pusher:'))return;
+  if(DEBUG)console.log('[pred]',name,d);
+  const data=(typeof d==='string')?JSON.parse(d):(d||{});
+  const pred=data.prediction||data;
+  if(!pred||(typeof pred!=='object'))return;
+  if(name.includes('PredictionCreated')||name.includes('PredictionUpdated'))showPred(pred,'active');
+  else if(name.includes('PredictionLocked'))showPred(pred,'locked');
+  else if(name.includes('PredictionResulted')||name.includes('PredictionResolved'))showPred(pred,'resolved');
+  else if(name.includes('PredictionCancelled'))hidePred();
+}
+
+async function start(){
+  if(!SLUG&&!CID){
+    // demo mode
+    showPred({title:'Va câștiga highman meciul?',options:[
+      {title:'Da, cu siguranță!',total_users:847},
+      {title:'Nu, pică guaranteed',total_users:312}
+    ]},'active');
+    return;
+  }
+  await loadPusher();
+  let crid=CID;
+  if(!crid&&SLUG){
+    const j=await tryProxy(`https://kick.com/api/v2/channels/${SLUG}`);
+    if(j&&j.chatroom)crid=String(j.chatroom.id);
+  }
+  if(!crid){console.error('[pred] no crid');return;}
+  const pusher=new Pusher('32cbd69e4b950bf97679',{cluster:'us2',wsHost:'ws-us2.pusher.com',enabledTransports:['ws','wss']});
+  pusher.subscribe(`chatrooms.${crid}.v2`).bind_global(handleEvent);
+  pusher.subscribe(`chatroom_${crid}`).bind_global(handleEvent);
+  if(DEBUG)console.log('[pred] connected crid='+crid);
+}
+start();
+</script>
+</body>
+</html>
